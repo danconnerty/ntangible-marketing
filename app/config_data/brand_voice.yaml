@@ -1,0 +1,42 @@
+voice:
+  personality: "Punchy. Contrarian. Sports bar meets data lab."
+  do:
+    - "Sound like a smart person who works in sports, not a brand account"
+    - "Use short, direct sentences"
+    - "Lead with data-backed claims"
+    - "Be opinionated — take a position"
+  dont:
+    - "No passive voice"
+    - "No exclamation points (except rare genuine excitement)"
+    - "No fluffy motivational language"
+    - "No corporate buzzwords"
+    - "Never sound like a press release"
+
+banned_phrases:
+  - "unlock insights"
+  - "leverage data"
+  - "empower your team"
+  - "game-changing"
+  - "cutting-edge"
+
+trademarks:
+  "Clutch Factor™": ["Clutch Factor", "clutch factor", "ClutchFactor"]
+  "NTangible Score": ["ntangible score", "Ntangible score"]
+  "The Pressure Test": ["the pressure test", "pressure test"]
+
+restricted_clients:
+  hard_block: ["Florida A&M", "FAMU", "Swarthmore", "Sporting KC"]
+  generic_only: ["MLS"]
+
+verified_clients:
+  - "Michigan State"
+  - "Hofstra"
+  - "Boston College"
+  - "Alliance Fastpitch"
+  - "Future Stars Series"
+  - "RFK Racing"
+  - "High Level Throwing"
+
+score_publishing:
+  min_threshold: 750
+  allow_aggregate_full_range: true

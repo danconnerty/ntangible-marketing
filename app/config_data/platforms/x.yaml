@@ -1,0 +1,3 @@
+x:
+  single_tweet_max_chars: 280
+  max_hashtags: 2

@@ -1,0 +1,45 @@
+claims:
+  cf_all_american:
+    text: "73% of athletes scoring above 800 CF were named All-American"
+    check_value_groups:
+      - ["73%"]
+      - ["800"]
+    source: "NTangible internal dataset"
+    verified_date: "2026-03-01"
+
+  failed_transfer_cost:
+    text: "The average failed D1 transfer costs $150K"
+    check_value_groups:
+      - ["$150K", "$150,000", "150K"]
+    source: "Industry research"
+    verified_date: "2026-01-15"
+
+  draft_bust_cost:
+    text: "Average 1st round draft bust: -$3.5M"
+    check_value_groups:
+      - ["$3.5M", "$3.5 million", "3.5M"]
+    source: "Industry research"
+    verified_date: "2026-01-15"
+
+  youth_churn_cost:
+    text: "Youth churn: -$50K lifetime value"
+    check_value_groups:
+      - ["$50K", "$50,000", "50K"]
+    source: "NTangible internal estimate"
+    verified_date: "2026-02-01"
+
+  assessment_count:
+    text: "6,000+ assessments. 1M+ data points. 7 sports."
+    check_value_groups:
+      - ["6,000", "6000"]
+      - ["1M", "1,000,000"]
+      - ["7 sports"]
+    source: "NTangible platform metrics"
+    verified_date: "2026-03-15"
+
+  alliance_athlete_count:
+    text: "30,000+ athletes assessed through Alliance Fastpitch"
+    check_value_groups:
+      - ["30,000", "30000", "30K"]
+    source: "Alliance Fastpitch partnership"
+    verified_date: "2026-03-01"

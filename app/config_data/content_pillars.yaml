@@ -1,0 +1,33 @@
+pillars:
+  blind_spot:
+    description: "You're evaluating half the picture"
+    example_angles:
+      - "You measure arm strength, speed, GPA. What about pressure?"
+      - "Film tells you what happened. Not what happens when it counts."
+
+  cost_of_guessing:
+    description: "The financial cost of not measuring mental performance"
+    note: "All dollar amounts and percentages must come from approved_claims.yaml"
+    example_angles:
+      - "You're guessing on half the recruiting decision"
+      - "What does it cost when the transfer doesn't work out?"
+
+  client_proof:
+    description: "Real programs using NTangible, real results"
+    note: "Only reference verified_clients. Specific outcomes must be in approved_claims.yaml"
+    example_angles:
+      - "D1 programs are measuring what matters"
+      - "The data speaks for itself"
+
+  thought_leadership:
+    description: "NTangible's position in the mental performance conversation"
+    example_angles:
+      - "Personality profiles don't predict performance under pressure"
+      - "Coach Alignment Index — the feature nobody else has"
+
+  product:
+    description: "What NTangible does and how it works"
+    note: "Specific numbers must come from approved_claims.yaml"
+    example_angles:
+      - "Not a survey. A validated cognitive assessment."
+      - "We measure what happens when it counts."
