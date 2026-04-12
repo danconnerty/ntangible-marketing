@@ -11,3 +11,7 @@ data/content_brain/normalized/
 data/content_brain/runs/
 .superpowers/
 .playwright-mcp/
+output/
+*.bak
+*.log
+.DS_Store

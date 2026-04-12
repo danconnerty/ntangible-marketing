@@ -721,10 +721,10 @@ def seed():
         db.flush()
 
         contacts = [
-            LeadContact(id=uuid.uuid4(), lead_account_id=leads[0].id, name="Jacquie Joseph", email="josephj@msu.edu", role="Head Coach"),
-            LeadContact(id=uuid.uuid4(), lead_account_id=leads[0].id, name="Sarah Parker", email="sparker@msu.edu", role="Recruiting Coordinator"),
-            LeadContact(id=uuid.uuid4(), lead_account_id=leads[1].id, name="Larissa Anderson", email="larissa.anderson@hofstra.edu", role="Head Coach"),
-            LeadContact(id=uuid.uuid4(), lead_account_id=leads[2].id, name="Amy Kvilhaug", email="amy.kvilhaug@bc.edu", role="Head Coach"),
+            LeadContact(id=uuid.uuid4(), lead_account_id=leads[0].id, name="Demo Head Coach", email="head-coach@example.edu", role="Head Coach"),
+            LeadContact(id=uuid.uuid4(), lead_account_id=leads[0].id, name="Demo Recruiting Coordinator", email="recruiting@example.edu", role="Recruiting Coordinator"),
+            LeadContact(id=uuid.uuid4(), lead_account_id=leads[1].id, name="Demo Head Coach 2", email="head-coach-2@example.edu", role="Head Coach"),
+            LeadContact(id=uuid.uuid4(), lead_account_id=leads[2].id, name="Demo Head Coach 3", email="head-coach-3@example.edu", role="Head Coach"),
         ]
         db.add_all(contacts)
         db.flush()

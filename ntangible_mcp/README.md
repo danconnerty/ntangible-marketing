@@ -86,6 +86,29 @@ Query analytics, history, and the content brain.
 | `search_history` | `history_type` (rejected/expired), `limit` |
 | `search_brain` | `query`, `platform`, `limit` |
 
+### 6. `process_file`
+Send a file through the processing agent for knowledge extraction.
+
+The file content is queued, then the hosted processor classifies it (knowledge kind, topic, confidence), extracts entities, and reasons about connections to the existing graph.
+
+| Arg | Required | Description |
+|-----|----------|-------------|
+| `file_content` | yes | The text content to process |
+| `file_name` | yes | Original filename for context |
+| `file_type` | no | MIME type hint (e.g. `application/pdf`) |
+
+### 7. `get_context`
+Query the knowledge graph to assemble a context packet for a task.
+
+Searches entities by name, expands their edges, finds related knowledge nodes, and returns structured context. Use this before taking action on a topic, person, or company.
+
+| Arg | Required | Description |
+|-----|----------|-------------|
+| `query` | yes | What to search for (e.g. "Alliance Sports partnership") |
+| `topic` | no | Filter by topic key (marketing, work, people, projects, finance) |
+| `max_entities` | no | Max entities to return (default 10) |
+| `max_knowledge` | no | Max knowledge nodes to return (default 15) |
+
 ## New API Endpoints
 
 The MCP server relies on three new endpoints added at `/api/mcp/`:
