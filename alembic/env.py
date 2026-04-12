@@ -36,6 +36,7 @@ def run_migrations_offline() -> None:
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
+        version_num_length=64,
     )
     with context.begin_transaction():
         context.run_migrations()
@@ -54,6 +55,7 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_metadata,
             version_table_pk=False,
+            version_num_length=64,
         )
         with context.begin_transaction():
             context.run_migrations()
