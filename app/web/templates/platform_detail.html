@@ -1,0 +1,611 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="page-header">
+  <a href="/control-room/workflows" class="plat-page-back">&larr; All Platforms</a>
+  <div class="plat-page-title-row">
+    <div class="plat-hub-icon platform-icon-{{ platform.key }}" style="width:44px;height:44px;font-size:20px;">{{ platform.icon }}</div>
+    <div>
+      <h1>{{ platform.name }}</h1>
+      <p class="subtitle">{{ platform.purpose }}</p>
+    </div>
+  </div>
+</header>
+
+<!-- Script MUST be before x-data so it's defined when Alpine initializes -->
+<script>
+window.workflowWizard = function() {
+    return {
+      showWizard: false, step: 1,
+      workflowType: '', platform: '{{ platform.key }}',
+      name: '', contentType: '', targetAudience: '', contentPillar: '', intentTag: '',
+      toneNotes: '', ctaPreferences: '', hashtagRules: '',
+      days: [], triggerTime: '07:00', publishTime: '07:00', timezone: 'America/New_York',
+      partnerSource: '', eventType: '',
+      preselectedPlatform: '{{ platform.key }}',
+      get slug() { return this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); },
+      get modeValue() { return this.workflowType === 'manual_calendar' ? 'manual' : 'automatic'; },
+      get triggerTypeValue() { return this.workflowType === 'automatic_signal' ? 'external' : 'calendar'; },
+      get cronExpression() {
+        if (this.triggerTypeValue !== 'calendar') return '';
+        var dayMap = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 0 };
+        var cronDays = this.days.map(function(d) { return dayMap[d]; }).join(',') || '*';
+        var parts = this.triggerTime.split(':');
+        return parts[1] + ' ' + parts[0] + ' * * ' + cronDays;
+      },
+      get triggerLabel() {
+        if (this.triggerTypeValue === 'external') return 'On ' + (this.partnerSource || 'partner') + ' ' + (this.eventType || 'event');
+        if (this.days.length === 0) return 'No days selected';
+        return 'Every ' + this.days.join(', ') + ' at ' + this.triggerTime + ' ET';
+      },
+      toggleDay: function(day) {
+        if (this.days.includes(day)) { this.days = this.days.filter(function(d) { return d !== day; }); }
+        else { this.days.push(day); }
+      },
+      contentTypes: {
+        linkedin: [{value:'thought_leadership',label:'Thought Leadership'},{value:'data_insight',label:'Data Insight'},{value:'company_update',label:'Company Update'},{value:'partner_proof',label:'Partner Proof'},{value:'case_study',label:'Case Study'}],
+        x: [{value:'hot_take',label:'Hot Take'},{value:'data_drop',label:'Data Drop'},{value:'trend_jack',label:'Trend Jack'},{value:'thread',label:'Thread'},{value:'reactive_content',label:'Reactive Content'}],
+        instagram: [{value:'athlete_spotlight',label:'Athlete Spotlight'},{value:'commitment_post',label:'Commitment Post'},{value:'clutch_certified',label:'Clutch Certified'},{value:'event_leaderboard',label:'Event Leaderboard'},{value:'bold_statement',label:'Bold Statement'},{value:'carousel',label:'Carousel'},{value:'reel',label:'Reel'},{value:'story',label:'Story'}],
+        newsletter: [{value:'monthly_digest',label:'Monthly Digest'},{value:'segment_update',label:'Segment Update'}]
+      },
+      platformDefaults: {
+        linkedin: {tone:'Professional but not corporate. Founder-in-the-arena, not press release. Short paragraphs. Data-backed claims.',cta:'Soft CTAs: Thoughts? / Anyone else seeing this? / DM me',hashtags:'3-5 max. Mix evergreen + topical.'},
+        x: {tone:'Punchy. Contrarian. Sports bar meets data lab. Never sounds like a brand account.',cta:'Embedded in voice. No hard sell.',hashtags:'1-2 max. Over-tagging kills reach.'},
+        instagram: {tone:'Bold, visual-first. Hook must stand alone. Lead with tension or provocative truth.',cta:'One per post. Rotate: tag, link in bio, comment, or share.',hashtags:'6-10 per post. Always at the end.'},
+        newsletter: {tone:'Data insight hook, client/partner proof, product update, clear CTA.',cta:'One primary CTA per section. Direct and clear.',hashtags:'Not applicable.'}
+      },
+      applyPlatformDefaults: function() {
+        var d = this.platformDefaults[this.platform];
+        if (d) { this.toneNotes = d.tone; this.ctaPreferences = d.cta; this.hashtagRules = d.hashtags; }
+        this.contentType = ''; this.name = '';
+      },
+      autoSuggestName: function() {
+        if (!this.platform || !this.contentType) return;
+        var pLabel = {linkedin:'LinkedIn',x:'X',instagram:'Instagram',newsletter:'Newsletter'}[this.platform] || this.platform;
+        var tLabel = this.contentType.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+        this.name = pLabel + ' ' + tLabel;
+      },
+      openForPlatform: function(plat) {
+        this.preselectedPlatform = plat;
+        this.platform = plat;
+        this.applyPlatformDefaults();
+        this.showWizard = true;
+        this.step = 1;
+        document.body.style.overflow = 'hidden';
+      },
+      openFresh: function() {
+        this.preselectedPlatform = '{{ platform.key }}';
+        this.platform = '{{ platform.key }}';
+        this.applyPlatformDefaults();
+        this.showWizard = true;
+        this.step = 1; /* Step 1 = Type, then skip to Step 3 (Content) since platform is known */
+        document.body.style.overflow = 'hidden';
+      }
+    };
+};
+</script>
+
+<section x-data="workflowWizard()" @keydown.escape.window="showWizard = false; document.body.style.overflow = ''">
+
+  <!-- ==================== SECTION 1: VOICE & RULES ==================== -->
+  <div class="plat-page-section">
+    <div class="plat-page-rules-header plat-page-rules-header-{{ platform.key }}">
+      <h2>Voice &amp; Rules</h2>
+      <p class="plat-page-rules-subtitle">Blueprint reference for {{ platform.name }} content generation.</p>
+    </div>
+
+    <div class="plat-page-rules-body card">
+      <div class="plat-rules-grid">
+        <div class="plat-rule-item">
+          <span class="plat-rule-label">Purpose</span>
+          <span class="plat-rule-value">{{ platform.purpose }}</span>
+        </div>
+        <div class="plat-rule-item">
+          <span class="plat-rule-label">Audience</span>
+          <span class="plat-rule-value">{{ platform.audience }}</span>
+        </div>
+        <div class="plat-rule-item plat-rule-item-full">
+          <span class="plat-rule-label">Voice</span>
+          <span class="plat-rule-value">{{ platform.voice }}</span>
+        </div>
+        <div class="plat-rule-item">
+          <span class="plat-rule-label">Hashtag Rules</span>
+          <span class="plat-rule-value">{{ platform.hashtags }}</span>
+        </div>
+        <div class="plat-rule-item">
+          <span class="plat-rule-label">CTA Style</span>
+          <span class="plat-rule-value">{{ platform.cta }}</span>
+        </div>
+        <div class="plat-rule-item">
+          <span class="plat-rule-label">Posting Windows</span>
+          <span class="plat-rule-value mono">{{ platform.posting_windows }}</span>
+        </div>
+        <div class="plat-rule-item">
+          <span class="plat-rule-label">Character Limits</span>
+          <span class="plat-rule-value mono">{{ platform.max_chars }}</span>
+        </div>
+        <div class="plat-rule-item">
+          <span class="plat-rule-label">Image Requirements</span>
+          <span class="plat-rule-value">{{ platform.images }}</span>
+        </div>
+        <div class="plat-rule-item">
+          <span class="plat-rule-label">Automation Notes</span>
+          <span class="plat-rule-value">{{ platform.automation }}</span>
+        </div>
+      </div>
+
+      <div class="plat-rule-types">
+        <span class="plat-rule-label">Content Types</span>
+        <div class="plat-type-badges">
+          {% for ct in platform.content_types %}
+          <span class="badge platform-badge platform-{{ platform.key }}">{{ ct }}</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SECTION 2: ACTIVE WORKFLOWS ==================== -->
+  <div class="plat-page-section">
+    <div class="plat-section-header">
+      <h2>Active Workflows</h2>
+      <button class="btn btn-primary" @click="openFresh()" onclick="return false;">+ New {{ platform.name }} Workflow</button>
+    </div>
+
+    {% if workflows %}
+    <div class="workflow-list">
+      {% for wf in workflows %}
+      <a href="/control-room/workflows/{{ wf.slug }}" class="workflow-card-rich card">
+        <div class="wf-card-top">
+          <div class="wf-card-header">
+            <strong class="wf-card-name">{{ wf.name }}</strong>
+            <div class="wf-card-badges">
+              {% if wf.mode == 'automatic' %}
+                <span class="badge badge-info">Auto</span>
+              {% else %}
+                <span class="badge badge-muted">Manual</span>
+              {% endif %}
+              {% if wf.trigger_type == 'external' %}
+                <span class="badge badge-accent">Signal</span>
+              {% endif %}
+              {% if wf.content_type %}
+                <span class="badge badge-muted">{{ wf.content_type|replace('_', ' ')|title }}</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="wf-card-trigger mono muted">{{ wf.trigger_description or 'No trigger configured' }}</div>
+        </div>
+        <div class="wf-card-body">
+          {% if wf.target_audience %}
+            <div class="wf-card-detail"><span class="wf-card-detail-label">Audience:</span><span>{{ wf.target_audience }}</span></div>
+          {% endif %}
+          {% if wf.tone_summary %}
+            <div class="wf-card-detail wf-card-voice"><span class="wf-card-detail-label">Voice:</span><span>{{ wf.tone_summary }}</span></div>
+          {% endif %}
+        </div>
+        <div class="wf-card-footer">
+          <div class="wf-card-stats">
+            <span class="text-green">{{ wf.published_count }} published</span>
+            <span class="text-muted">&middot;</span>
+            <span class="text-red">{{ wf.rejected_count }} rejected</span>
+            <span class="text-muted">&middot;</span>
+            <span class="text-amber">{{ wf.expired_count }} expired</span>
+          </div>
+          <div class="wf-card-meta mono muted">
+            {% if wf.active_version_number %}v{{ wf.active_version_number }}{% endif %}
+            {% if wf.last_run_label %}&middot; Last run: {{ wf.last_run_label }}{% endif %}
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:20px;">
+      <p class="empty-state-desc">No {{ platform.name }} workflows yet. Create one to start generating {{ platform.name }} content.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ==================== SECTION 3: RECENT POSTS ==================== -->
+  <div class="plat-page-section">
+    <h2 class="plat-section-subhead" style="font-size:18px;font-weight:600;margin-bottom:12px;">Recent {{ platform.post_label }}</h2>
+    {% if recent_posts %}
+    <div class="plat-recent-list">
+      {% for post in recent_posts %}
+      <div class="plat-recent-item card">
+        <div class="plat-recent-meta">
+          <span class="mono muted text-small">{{ post.published_label or 'Unpublished' }}</span>
+          <span class="muted text-small">{{ post.workflow_name }}</span>
+        </div>
+        <p class="plat-recent-content">{{ post.content }}</p>
+        {% if post.post_url %}
+          <a href="{{ post.post_url }}" target="_blank" class="text-small">View {{ platform.post_label_singular }} &rarr;</a>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted text-small" style="padding:8px 0;">No published {{ platform.post_label|lower }} yet.</p>
+    {% endif %}
+  </div>
+
+  <!-- ==================== WORKFLOW WIZARD MODAL ==================== -->
+
+  <!-- Wizard backdrop -->
+  <div x-show="showWizard" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9998;" @click="showWizard = false; document.body.style.overflow = ''"></div>
+  <!-- Wizard modal panel -->
+  <div x-show="showWizard" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;background:#ffffff;border-radius:16px;box-shadow:0 25px 60px rgba(0,0,0,0.2);width:min(860px,calc(100vw - 48px));min-height:500px;max-height:calc(100vh - 48px);overflow-y:auto;" @click.stop>
+
+    <!-- Close button -->
+    <button @click="showWizard = false; document.body.style.overflow = ''"
+            style="position:absolute;top:16px;right:16px;background:#fff;border:1px solid #e5e7eb;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;color:#6b7280;z-index:10;box-shadow:0 1px 3px rgba(0,0,0,0.1);"
+            title="Close">&times;</button>
+
+    <div class="wizard-container" style="border:none;border-radius:0;padding:24px 28px;">
+
+      <!-- Progress bar -->
+      <div class="wizard-progress">
+        <template x-for="s in [
+          { n: 1, label: 'Type' },
+          { n: 2, label: 'Platform' },
+          { n: 3, label: 'Content' },
+          { n: 4, label: 'Trigger' },
+          { n: 5, label: 'Review' },
+        ]" :key="s.n">
+          <div class="wizard-step-indicator"
+               :class="{
+                 'active': step === s.n,
+                 'done': step > s.n,
+                 'wizard-step-skip': s.n === 2 && preselectedPlatform
+               }">
+            <span class="wizard-step-num" x-text="step > s.n ? '\u2713' : (s.n === 2 && preselectedPlatform ? '\u2713' : s.n)"></span>
+            <span class="wizard-step-label" x-text="s.label"></span>
+          </div>
+        </template>
+      </div>
+
+      <!-- ===== STEP 1: Choose Type ===== -->
+      <div x-show="step === 1" x-transition>
+        <h2 class="wizard-section-title">How should this workflow operate?</h2>
+        <p class="wizard-section-desc">Choose how content gets reviewed and published.</p>
+
+        <div class="wizard-card-grid">
+          <button class="wizard-choice-card" :class="{ 'selected': workflowType === 'manual_calendar' }"
+                  @click="workflowType = 'manual_calendar'">
+            <div class="wizard-choice-icon">&#128221;</div>
+            <div class="wizard-choice-title">Manual Review</div>
+            <div class="wizard-choice-desc">Content fires on a schedule. You review and approve before it publishes.</div>
+            <div class="wizard-choice-tag badge badge-muted">Calendar + Human Review</div>
+          </button>
+
+          <button class="wizard-choice-card" :class="{ 'selected': workflowType === 'automatic_calendar' }"
+                  @click="workflowType = 'automatic_calendar'">
+            <div class="wizard-choice-icon">&#9201;</div>
+            <div class="wizard-choice-title">Automatic Schedule</div>
+            <div class="wizard-choice-desc">Content fires on a schedule and auto-publishes after compliance check. No human review.</div>
+            <div class="wizard-choice-tag badge badge-info">Calendar + Auto-Publish</div>
+          </button>
+
+          <button class="wizard-choice-card" :class="{ 'selected': workflowType === 'automatic_signal' }"
+                  @click="workflowType = 'automatic_signal'">
+            <div class="wizard-choice-icon">&#9889;</div>
+            <div class="wizard-choice-title">Automatic Signal</div>
+            <div class="wizard-choice-desc">Content fires when a partner webhook or external event arrives. Auto-publishes immediately.</div>
+            <div class="wizard-choice-tag badge badge-accent">External Trigger + Auto-Publish</div>
+          </button>
+        </div>
+
+        <div class="wizard-nav">
+          <div></div>
+          <button class="btn btn-primary" :disabled="!workflowType"
+                  @click="preselectedPlatform ? step = 3 : step = 2">
+            <span x-text="preselectedPlatform ? 'Next: Configure Content' : 'Next: Choose Platform'"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== STEP 2: Choose Platform (skipped when preselected) ===== -->
+      <div x-show="step === 2" x-transition>
+        <h2 class="wizard-section-title">Which platform?</h2>
+        <p class="wizard-section-desc">Each platform has its own voice, rules, and content formats.</p>
+
+        <div class="wizard-card-grid wizard-card-grid-4">
+          <button class="wizard-choice-card platform-choice" :class="{ 'selected': platform === 'linkedin' }"
+                  @click="platform = 'linkedin'; applyPlatformDefaults()">
+            <div class="wizard-choice-icon platform-icon-linkedin">in</div>
+            <div class="wizard-choice-title">LinkedIn</div>
+            <div class="wizard-choice-desc">Professional but not corporate. Founder-in-the-arena voice. Short paragraphs, data-backed claims. 3-5 hashtags.</div>
+            <div class="wizard-choice-meta mono">Max 3,000 chars &middot; Tue-Thu 7-9 AM ET</div>
+          </button>
+
+          <button class="wizard-choice-card platform-choice" :class="{ 'selected': platform === 'x' }"
+                  @click="platform = 'x'; applyPlatformDefaults()">
+            <div class="wizard-choice-icon platform-icon-x">X</div>
+            <div class="wizard-choice-title">X (Twitter)</div>
+            <div class="wizard-choice-desc">Punchy. Contrarian. Sports bar meets data lab. Never sounds like a brand account. 1-2 hashtags max.</div>
+            <div class="wizard-choice-meta mono">Max 280 chars &middot; Speed-first</div>
+          </button>
+
+          <button class="wizard-choice-card platform-choice" :class="{ 'selected': platform === 'instagram' }"
+                  @click="platform = 'instagram'; applyPlatformDefaults()">
+            <div class="wizard-choice-icon platform-icon-instagram">IG</div>
+            <div class="wizard-choice-title">Instagram</div>
+            <div class="wizard-choice-desc">Bold, visual-first. Hook must stand alone. Lead with tension or provocative truth. 6-10 hashtags at the end.</div>
+            <div class="wizard-choice-meta mono">Max 2,200 chars &middot; Tue-Fri 11AM-1PM ET</div>
+          </button>
+
+          <button class="wizard-choice-card platform-choice" :class="{ 'selected': platform === 'newsletter' }"
+                  @click="platform = 'newsletter'; applyPlatformDefaults()">
+            <div class="wizard-choice-icon platform-icon-newsletter">&#9993;</div>
+            <div class="wizard-choice-title">Newsletter</div>
+            <div class="wizard-choice-desc">Monthly cadence. Two segments: coaches/scouts and partners/event directors. Data hook, proof, update, CTA.</div>
+            <div class="wizard-choice-meta mono">Max 4,000 chars &middot; Monthly</div>
+          </button>
+        </div>
+
+        <div class="wizard-nav">
+          <button class="btn" @click="step = 1">Back</button>
+          <button class="btn btn-primary" :disabled="!platform" @click="step = 3">Next: Configure Content</button>
+        </div>
+      </div>
+
+      <!-- ===== STEP 3: Configure Content ===== -->
+      <div x-show="step === 3" x-transition>
+        <h2 class="wizard-section-title">Configure Content</h2>
+        <p class="wizard-section-desc">Define what this workflow generates. Platform defaults are pre-filled -- edit to customize.</p>
+
+        <div class="wizard-form-grid">
+          <div class="wizard-form-row">
+            <div class="wizard-form-field">
+              <label class="wizard-label">Content Type</label>
+              <select class="select" x-model="contentType" @change="autoSuggestName()">
+                <option value="">Select content type...</option>
+                <template x-for="ct in contentTypes[platform] || []" :key="ct.value">
+                  <option :value="ct.value" x-text="ct.label"></option>
+                </template>
+              </select>
+            </div>
+            <div class="wizard-form-field">
+              <label class="wizard-label">Workflow Name</label>
+              <input class="input" type="text" x-model="name" placeholder="e.g. LinkedIn Thought Leadership">
+              <span class="wizard-hint mono" x-show="name" x-text="'Slug: ' + slug"></span>
+            </div>
+          </div>
+
+          <div class="wizard-form-row">
+            <div class="wizard-form-field">
+              <label class="wizard-label">Target Audience</label>
+              <input class="input" type="text" x-model="targetAudience" placeholder="e.g. College coaches, D1 recruiting coordinators">
+            </div>
+            <div class="wizard-form-field">
+              <label class="wizard-label">Content Pillar</label>
+              <select class="select" x-model="contentPillar">
+                <option value="">Select pillar...</option>
+                <option value="blind_spot">Blind Spot</option>
+                <option value="cost_of_guessing">Cost of Guessing</option>
+                <option value="client_proof">Client Proof</option>
+                <option value="thought_leadership">Thought Leadership</option>
+                <option value="product">Product</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="wizard-form-row">
+            <div class="wizard-form-field">
+              <label class="wizard-label">Intent Tag</label>
+              <select class="select" x-model="intentTag">
+                <option value="">Select intent...</option>
+                <option value="brand">Brand</option>
+                <option value="partner">Partner</option>
+                <option value="revenue">Revenue</option>
+              </select>
+            </div>
+            <div class="wizard-form-field"></div>
+          </div>
+
+          <div class="wizard-form-full">
+            <label class="wizard-label">Tone / Voice Notes</label>
+            <textarea class="input textarea" x-model="toneNotes" rows="3" placeholder="Describe the voice for this workflow..."></textarea>
+            <span class="wizard-hint">Pre-filled from platform defaults. Edit to customize this workflow's voice.</span>
+          </div>
+
+          <div class="wizard-form-row">
+            <div class="wizard-form-field">
+              <label class="wizard-label">CTA Preferences</label>
+              <textarea class="input textarea" x-model="ctaPreferences" rows="2" style="min-height: 72px;" placeholder="CTA style..."></textarea>
+            </div>
+            <div class="wizard-form-field">
+              <label class="wizard-label">Hashtag Rules</label>
+              <textarea class="input textarea" x-model="hashtagRules" rows="2" style="min-height: 72px;" placeholder="Hashtag rules..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="wizard-nav">
+          <button class="btn" @click="preselectedPlatform ? step = 1 : step = 2">Back</button>
+          <button class="btn btn-primary" :disabled="!name || !contentType" @click="step = 4">Next: Configure Trigger</button>
+        </div>
+      </div>
+
+      <!-- ===== STEP 4: Configure Trigger ===== -->
+      <div x-show="step === 4" x-transition>
+        <h2 class="wizard-section-title">Configure Trigger</h2>
+        <p class="wizard-section-desc" x-text="workflowType === 'automatic_signal'
+          ? 'Choose which partner event fires this workflow.'
+          : 'Set the schedule for content generation.'"></p>
+
+        <!-- Calendar triggers (manual + automatic schedule) -->
+        <div x-show="workflowType !== 'automatic_signal'" class="wizard-form-grid">
+          <div class="wizard-form-full">
+            <label class="wizard-label">Days of Week</label>
+            <div class="wizard-day-picker">
+              <template x-for="day in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']" :key="day">
+                <button type="button" class="wizard-day-btn"
+                        :class="{ 'active': days.includes(day) }"
+                        @click="toggleDay(day)" x-text="day"></button>
+              </template>
+            </div>
+          </div>
+
+          <div class="wizard-form-row">
+            <div class="wizard-form-field">
+              <label class="wizard-label">Generation Time</label>
+              <input class="input" type="time" x-model="triggerTime">
+              <span class="wizard-hint">When the engine generates content.</span>
+            </div>
+            <div class="wizard-form-field" x-show="workflowType === 'automatic_calendar'">
+              <label class="wizard-label">Publish Time</label>
+              <input class="input" type="time" x-model="publishTime">
+              <span class="wizard-hint">When auto-generated content goes live.</span>
+            </div>
+            <div class="wizard-form-field">
+              <label class="wizard-label">Timezone</label>
+              <select class="select" x-model="timezone">
+                <option value="America/New_York">Eastern (ET)</option>
+                <option value="America/Chicago">Central (CT)</option>
+                <option value="America/Denver">Mountain (MT)</option>
+                <option value="America/Los_Angeles">Pacific (PT)</option>
+                <option value="UTC">UTC</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="wizard-form-full" x-show="days.length > 0">
+            <div class="wizard-preview-box">
+              <span class="wizard-preview-label">Schedule Preview</span>
+              <span class="mono" x-text="triggerLabel"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Signal triggers -->
+        <div x-show="workflowType === 'automatic_signal'" class="wizard-form-grid">
+          <div class="wizard-form-row">
+            <div class="wizard-form-field">
+              <label class="wizard-label">Partner Source</label>
+              <select class="select" x-model="partnerSource">
+                <option value="">Select partner...</option>
+                {% for ps in partner_sources %}
+                <option value="{{ ps.slug }}">{{ ps.display_name }}</option>
+                {% endfor %}
+                <option value="alliance_fastpitch">Alliance Fastpitch</option>
+                <option value="future_stars_series">Future Stars Series</option>
+              </select>
+            </div>
+            <div class="wizard-form-field">
+              <label class="wizard-label">Event Type</label>
+              <select class="select" x-model="eventType">
+                <option value="">Select event type...</option>
+                <option value="assessment_completed">Assessment Completed</option>
+                <option value="commitment_update">Commitment Update</option>
+                <option value="leaderboard_published">Leaderboard Published</option>
+                <option value="roster_update">Roster Update</option>
+                <option value="event_recap">Event Recap</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="wizard-form-full" x-show="partnerSource && eventType">
+            <div class="wizard-preview-box">
+              <span class="wizard-preview-label">Trigger Preview</span>
+              <span class="mono" x-text="triggerLabel"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="wizard-nav">
+          <button class="btn" @click="step = 3">Back</button>
+          <button class="btn btn-primary" @click="step = 5"
+                  :disabled="workflowType === 'automatic_signal' ? (!partnerSource || !eventType) : (days.length === 0)">
+            Next: Review
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== STEP 5: Review ===== -->
+      <div x-show="step === 5" x-transition>
+        <h2 class="wizard-section-title">Review Workflow</h2>
+        <p class="wizard-section-desc">Confirm everything looks right, then create.</p>
+
+        <div class="wizard-review-card card">
+          <div class="wizard-review-header">
+            <h3 x-text="name" class="wizard-review-name"></h3>
+            <div class="wizard-review-badges">
+              <span class="badge platform-badge" :class="'platform-' + platform" x-text="platform.toUpperCase()"></span>
+              <span class="badge" :class="modeValue === 'automatic' ? 'badge-info' : 'badge-muted'" x-text="modeValue === 'automatic' ? 'Automatic' : 'Manual'"></span>
+              <span class="badge" :class="triggerTypeValue === 'external' ? 'badge-accent' : 'badge-muted'" x-text="triggerTypeValue === 'external' ? 'Signal Trigger' : 'Calendar Trigger'"></span>
+            </div>
+          </div>
+
+          <div class="wizard-review-grid">
+            <div class="wizard-review-section">
+              <div class="wizard-review-label">Content Type</div>
+              <div class="wizard-review-value" x-text="contentType.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); })"></div>
+            </div>
+            <div class="wizard-review-section">
+              <div class="wizard-review-label">Trigger</div>
+              <div class="wizard-review-value mono" x-text="triggerLabel"></div>
+            </div>
+            <div class="wizard-review-section" x-show="targetAudience">
+              <div class="wizard-review-label">Target Audience</div>
+              <div class="wizard-review-value" x-text="targetAudience"></div>
+            </div>
+            <div class="wizard-review-section" x-show="contentPillar">
+              <div class="wizard-review-label">Content Pillar</div>
+              <div class="wizard-review-value" x-text="contentPillar.replace(/_/g, ' ').replace(/\b\w/g, function(l) { return l.toUpperCase(); })"></div>
+            </div>
+            <div class="wizard-review-section" x-show="intentTag">
+              <div class="wizard-review-label">Intent</div>
+              <div class="wizard-review-value" x-text="intentTag.replace(/\b\w/g, function(l) { return l.toUpperCase(); })"></div>
+            </div>
+          </div>
+
+          <div class="wizard-review-section" style="margin-top: 12px;">
+            <div class="wizard-review-label">Voice / Tone</div>
+            <div class="wizard-review-value text-small" x-text="toneNotes"></div>
+          </div>
+          <div class="wizard-review-row" style="margin-top: 8px;">
+            <div class="wizard-review-section" style="flex:1;">
+              <div class="wizard-review-label">CTA Style</div>
+              <div class="wizard-review-value text-small" x-text="ctaPreferences"></div>
+            </div>
+            <div class="wizard-review-section" style="flex:1;">
+              <div class="wizard-review-label">Hashtag Rules</div>
+              <div class="wizard-review-value text-small" x-text="hashtagRules"></div>
+            </div>
+          </div>
+        </div>
+
+        <form method="post" action="/control-room/workflows/create">
+          <input type="hidden" name="name" :value="name">
+          <input type="hidden" name="slug" :value="slug">
+          <input type="hidden" name="platform" :value="platform">
+          <input type="hidden" name="content_type" :value="contentType">
+          <input type="hidden" name="mode" :value="modeValue">
+          <input type="hidden" name="trigger_type" :value="triggerTypeValue">
+          <input type="hidden" name="target_audience" :value="targetAudience">
+          <input type="hidden" name="content_pillar" :value="contentPillar">
+          <input type="hidden" name="intent_tag" :value="intentTag">
+          <input type="hidden" name="tone_notes" :value="toneNotes">
+          <input type="hidden" name="cta_preferences" :value="ctaPreferences">
+          <input type="hidden" name="hashtag_rules" :value="hashtagRules">
+          <input type="hidden" name="cron_expression" :value="cronExpression">
+          <input type="hidden" name="trigger_time" :value="triggerTime">
+          <input type="hidden" name="publish_time" :value="publishTime">
+          <input type="hidden" name="timezone" :value="timezone">
+          <input type="hidden" name="partner_source" :value="partnerSource">
+          <input type="hidden" name="event_type" :value="eventType">
+          <input type="hidden" name="days" :value="JSON.stringify(days)">
+
+          <div class="wizard-nav">
+            <button type="button" class="btn" @click="step = 4">Back</button>
+            <button type="submit" class="btn btn-success btn-lg">Create Workflow</button>
+          </div>
+        </form>
+      </div>
+
+    </div><!-- /.wizard-container -->
+  </div><!-- /panel -->
+
+</section>
+{% endblock %}

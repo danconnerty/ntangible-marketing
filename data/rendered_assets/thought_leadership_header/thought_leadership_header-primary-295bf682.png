@@ -1,0 +1,19 @@
+{
+  "mock": true,
+  "template_family": "thought_leadership_header",
+  "brand_mode": "owned",
+  "canva_template_id": "pending_setup",
+  "configured_template_id": "pending_setup",
+  "expected_data_fields": [
+    "headline",
+    "subtitle"
+  ],
+  "text_fields": {
+    "headline": "Pressure data changes what your event means.",
+    "subtitle": "NTangible Alliance \u2014 Reserve Your Spot"
+  },
+  "numeric_fields": {},
+  "image_references": [],
+  "asset_role": "primary",
+  "title": "LinkedIn Company Update"
+}

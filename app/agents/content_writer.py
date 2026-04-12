@@ -3,7 +3,7 @@ import logging
 import time
 from typing import Any
 
-import anthropic
+from openai import AzureOpenAI
 
 from app.config import (
     get_approved_claims,
@@ -77,6 +77,11 @@ Do not invent statistics, percentages, dollar amounts, client names, or outcomes
 VERIFIED CLIENTS (only these may be named):
 {chr(10).join('- ' + client for client in brand['verified_clients'])}
 
+AVAILABLE IMAGE TEMPLATES (if media_needed is true, include image_request):
+- stat_card: data fields = headline, stat_value, stat_label, context
+- quote_graphic: data fields = quote_text, attribution
+- assessment_preview: data fields = athlete_name, cf_score, sport
+
 OUTPUT FORMAT:
 Return exactly 3 JSON objects separated by newlines. Each must have these fields:
 - content: the tweet text (string)
@@ -86,6 +91,7 @@ Return exactly 3 JSON objects separated by newlines. Each must have these fields
 - hashtags: list of 0-{platform['x']['max_hashtags']} hashtags
 - media_needed: boolean
 - intent: "brand" | "partner" | "revenue"
+- image_request: (ONLY when media_needed is true) object with template_family (one of the template names above) and data (object whose keys match that template's data fields). Omit this field entirely when media_needed is false.
 """
 
     user_prompt = f"""Generate 3 variations of a {content_type} tweet for the "{pillar}" content pillar.
@@ -115,17 +121,23 @@ def generate_tweets(
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     settings = get_settings()
     prompt = build_prompt(content_type, pillar, claims, context)
-    client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
+    client = AzureOpenAI(
+        api_key=settings.azure_openai_api_key,
+        azure_endpoint=settings.azure_openai_endpoint,
+        api_version=settings.azure_openai_api_version,
+    )
 
     start = time.time()
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=1024,
-        system=prompt["system"],
-        messages=[{"role": "user", "content": prompt["user"]}],
+    response = client.chat.completions.create(
+        model=settings.azure_openai_model,
+        max_completion_tokens=1024,
+        messages=[
+            {"role": "system", "content": prompt["system"]},
+            {"role": "user", "content": prompt["user"]},
+        ],
     )
     duration_ms = int((time.time() - start) * 1000)
-    raw_text = response.content[0].text
+    raw_text = response.choices[0].message.content
 
     variations: list[dict[str, Any]] = []
     for line in raw_text.strip().splitlines():
@@ -141,10 +153,10 @@ def generate_tweets(
     log_data = {
         "prompt_snapshot": prompt["system"] + "\n---\n" + prompt["user"],
         "response": {"raw_text": raw_text, "parsed_count": len(variations)},
-        "model": "claude-sonnet-4-6",
-        "tokens_in": response.usage.input_tokens,
-        "tokens_out": response.usage.output_tokens,
-        "cost_estimate": (response.usage.input_tokens * 0.003 + response.usage.output_tokens * 0.015) / 1000,
+        "model": settings.azure_openai_model,
+        "tokens_in": response.usage.prompt_tokens,
+        "tokens_out": response.usage.completion_tokens,
+        "cost_estimate": (response.usage.prompt_tokens * 0.00005 + response.usage.completion_tokens * 0.0004) / 1000,
         "duration_ms": duration_ms,
     }
     return variations, log_data

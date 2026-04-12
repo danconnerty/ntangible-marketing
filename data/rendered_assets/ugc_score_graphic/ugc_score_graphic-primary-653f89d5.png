@@ -1,0 +1,19 @@
+{
+  "mock": true,
+  "template_family": "ugc_score_graphic",
+  "brand_mode": "ntangible",
+  "canva_template_id": "ugc_score_graphic",
+  "configured_template_id": null,
+  "expected_data_fields": [],
+  "text_fields": {
+    "athlete_name": "Marcus Rivera",
+    "score_tier": "Elite",
+    "sport": "baseball"
+  },
+  "numeric_fields": {
+    "score": 912
+  },
+  "image_references": [],
+  "asset_role": "primary",
+  "title": "Marcus Rivera score graphic"
+}

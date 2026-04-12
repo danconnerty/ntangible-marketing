@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Phase 11</p>
+    <h1>UGC</h1>
+    <p>Trigger testimonial requests for high-scoring athletes and intake consented submissions.</p>
+  </div>
+</section>
+
+<section class="campaign-grid">
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Requests</p>
+      <h2>Create a Testimonial Request</h2>
+    </header>
+    <form hx-post="/control-room/ugc/requests" hx-target="#ugc-request-result" hx-swap="innerHTML">
+      <label>Athlete name <input class="input" name="athlete_name" required></label>
+      <label>Score <input class="input" type="number" name="score" min="0" required></label>
+      <label>Athlete email <input class="input" name="athlete_email"></label>
+      <label>Parent name <input class="input" name="parent_name"></label>
+      <label>Parent email <input class="input" name="parent_email"></label>
+      <label>Score tier <input class="input" name="score_tier" placeholder="Certified"></label>
+      <label>Sport <input class="input" name="sport" placeholder="softball"></label>
+      <label>Context <textarea class="input textarea" name="context" rows="4"></textarea></label>
+      <button class="btn btn-primary" type="submit">Generate Request</button>
+    </form>
+    <div id="ugc-request-result"></div>
+  </article>
+
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Submissions</p>
+      <h2>Intake a Video Submission</h2>
+    </header>
+    <form hx-post="/control-room/ugc/submissions" hx-target="#ugc-submission-result" hx-swap="innerHTML">
+      <label>Athlete name <input class="input" name="athlete_name" required></label>
+      <label>Score <input class="input" type="number" name="score" min="0" required></label>
+      <label>Video URL <input class="input" name="video_url" required></label>
+      <label>Testimonial text <textarea class="input textarea" name="testimonial_text" rows="4"></textarea></label>
+      <label><input type="checkbox" name="consent_athlete" checked> Athlete consent</label>
+      <label><input type="checkbox" name="consent_parent"> Parent consent</label>
+      <label><input type="checkbox" name="consent_share" checked> Consent to share</label>
+      <label>Athlete age <input class="input" type="number" name="athlete_age" min="0"></label>
+      <label>Score tier <input class="input" name="score_tier" placeholder="Certified"></label>
+      <button class="btn btn-primary" type="submit">Submit Video</button>
+    </form>
+    <div id="ugc-submission-result"></div>
+  </article>
+</section>
+
+<section class="campaign-grid mt-4">
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Requests</p>
+      <h2>Recent Requests</h2>
+    </header>
+    <div class="table-list">
+      {% for item in requests %}
+      <article class="analytics-row">
+        <div>
+          <strong>{{ item.athlete_name }}</strong>
+          <p class="text-muted">{{ item.score_tier }} · {{ item.subject }}</p>
+        </div>
+        <span class="badge badge-info">{{ item.status }}</span>
+      </article>
+      {% else %}
+      <p class="text-muted">No testimonial requests yet.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Submissions</p>
+      <h2>Recent Submissions</h2>
+    </header>
+    <div class="table-list">
+      {% for item in submissions %}
+      <article class="analytics-row">
+        <div>
+          <strong>{{ item.athlete_name }}</strong>
+          <p class="text-muted">{{ item.score_tier }} · {{ item.video_url }}</p>
+        </div>
+        <span class="badge badge-info">{{ item.status }}</span>
+      </article>
+      {% else %}
+      <p class="text-muted">No submissions yet.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+{% endblock %}

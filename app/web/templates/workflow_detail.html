@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <div class="flex-between" style="gap: 16px; flex-wrap: wrap;">
+        <div>
+            <h1>{{ workflow.name }}</h1>
+            <p class="text-muted">{{ workflow.slug }} &middot; v{{ active_version.version_number if active_version else '?' }}</p>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            {% if workflow.enabled %}
+                <span class="badge badge-success">Enabled</span>
+            {% else %}
+                <span class="badge badge-muted">Disabled</span>
+            {% endif %}
+            <div id="mode-toggle-area">
+                {% if workflow.mode.value == 'automatic' %}
+                    <span class="badge badge-info">Automatic</span>
+                    <button class="btn btn-sm btn-ghost"
+                            hx-post="/control-room/workflows/{{ workflow.slug }}/toggle-mode"
+                            hx-target="#mode-toggle-area" hx-swap="outerHTML">Switch to Manual</button>
+                {% else %}
+                    <span class="badge badge-muted">Manual</span>
+                    <button class="btn btn-sm btn-ghost"
+                            hx-post="/control-room/workflows/{{ workflow.slug }}/toggle-mode"
+                            hx-target="#mode-toggle-area" hx-swap="outerHTML">Switch to Automatic</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Platform & Content Configuration ===== -->
+<section class="card" style="margin-bottom: 16px;">
+    <h2 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Content Configuration</h2>
+    <div class="wf-detail-config-grid">
+        <div class="wf-detail-field">
+            <span class="wf-detail-field-label">Platform</span>
+            <div><span class="badge platform-badge platform-{{ workflow.platform.value }}">{{ workflow.platform.value | upper }}</span></div>
+        </div>
+        <div class="wf-detail-field">
+            <span class="wf-detail-field-label">Content Type</span>
+            <div class="mono">{{ workflow.content_type | replace('_', ' ') | title }}</div>
+        </div>
+        {% if config and config.routing %}
+        <div class="wf-detail-field">
+            <span class="wf-detail-field-label">Content Pillar</span>
+            <div>{{ config.routing.target_pillar | default('Not set', true) | replace('_', ' ') | title }}</div>
+        </div>
+        <div class="wf-detail-field">
+            <span class="wf-detail-field-label">Intent</span>
+            <div>{{ config.routing.target_intent | default('Not set', true) | title }}</div>
+        </div>
+        <div class="wf-detail-field">
+            <span class="wf-detail-field-label">Target Audience</span>
+            <div>{{ config.routing.target_audience_segment | default('Not set', true) }}</div>
+        </div>
+        {% endif %}
+        {% if config and config.formatting %}
+        <div class="wf-detail-field">
+            <span class="wf-detail-field-label">Max Characters</span>
+            <div class="mono">{{ config.formatting.max_chars | default('Platform default', true) }}</div>
+        </div>
+        <div class="wf-detail-field">
+            <span class="wf-detail-field-label">Max Hashtags</span>
+            <div class="mono">{{ config.formatting.max_hashtags | default('Platform default', true) }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if config and config.prompt and config.prompt.tone_notes %}
+    <div class="wf-detail-block" style="margin-top: 16px;">
+        <span class="wf-detail-field-label">Voice / Tone</span>
+        <p class="wf-detail-block-text">{{ config.prompt.tone_notes }}</p>
+    </div>
+    {% endif %}
+
+    {% if config and config.cta and config.cta.cta_rules %}
+    <div class="wf-detail-block" style="margin-top: 12px;">
+        <span class="wf-detail-field-label">CTA Style</span>
+        <p class="wf-detail-block-text">{{ config.cta.cta_rules }}</p>
+    </div>
+    {% endif %}
+
+    {% if workflow.description %}
+    <div class="wf-detail-block" style="margin-top: 12px;">
+        <span class="wf-detail-field-label">Description</span>
+        <p class="wf-detail-block-text">{{ workflow.description }}</p>
+    </div>
+    {% endif %}
+</section>
+
+<!-- ===== Trigger Configuration ===== -->
+<section class="card" style="margin-bottom: 16px;">
+    <h2 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Trigger</h2>
+    {% if calendar_rules %}
+    <div class="wf-detail-config-grid">
+        {% for rule in calendar_rules %}
+        <div class="wf-detail-field">
+            <span class="wf-detail-field-label">Schedule</span>
+            <div class="mono">{{ rule.cron_expression }}</div>
+        </div>
+        <div class="wf-detail-field">
+            <span class="wf-detail-field-label">Timezone</span>
+            <div>{{ rule.timezone }}</div>
+        </div>
+        {% if rule.publish_hour_local is not none %}
+        <div class="wf-detail-field">
+            <span class="wf-detail-field-label">Publish Time</span>
+            <div class="mono">{{ '%02d' | format(rule.publish_hour_local) }}:{{ '%02d' | format(rule.publish_minute_local | default(0, true)) }}</div>
+        </div>
+        {% endif %}
+        <div class="wf-detail-field">
+            <span class="wf-detail-field-label">Next Fire</span>
+            <div>{{ rule.next_fire_at.strftime('%b %d, %H:%M') if rule.next_fire_at else 'Not scheduled' }}</div>
+        </div>
+        <div class="wf-detail-field">
+            <span class="wf-detail-field-label">Last Fired</span>
+            <div>{{ rule.last_fired_at.strftime('%b %d, %H:%M') if rule.last_fired_at else 'Never' }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% elif partner_trigger %}
+    <div class="wf-detail-config-grid">
+        <div class="wf-detail-field">
+            <span class="wf-detail-field-label">Partner Source</span>
+            <div>{{ partner_trigger.partner_name | default('External', true) }}</div>
+        </div>
+        <div class="wf-detail-field">
+            <span class="wf-detail-field-label">Event Type</span>
+            <div class="mono">{{ partner_trigger.event_type | default('Any', true) }}</div>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-muted">No trigger configured yet. The workflow will only fire on manual requests.</p>
+    {% endif %}
+</section>
+
+<div class="grid-two" style="margin-bottom: 16px;">
+    <!-- ===== Version History ===== -->
+    <section class="card">
+        <h2 style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Version History</h2>
+        {% if versions %}
+        <ul class="version-list">
+            {% for version in versions %}
+            <li>
+                <div class="flex-between" style="gap: 8px;">
+                    <div>
+                        <strong>v{{ version.version_number }}</strong>
+                        {% if version.is_active %}<span class="badge badge-success">Active</span>{% endif %}
+                        <div class="text-muted text-small">{{ version.author }} &middot; {{ version.version_note or 'No note' }}</div>
+                    </div>
+                    {% if not version.is_active %}
+                    <form method="post"
+                          action="/control-room/workflows/{{ workflow.slug }}/versions/{{ version.version_number }}/activate"
+                          style="display: inline;">
+                        <button class="btn btn-sm btn-ghost" type="submit">Activate</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">No versions yet.</p>
+        {% endif %}
+    </section>
+
+    <!-- ===== Improve Workflow ===== -->
+    <section class="card">
+        <h2 style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Improve Workflow</h2>
+        <form method="post" action="/control-room/workflows/{{ workflow.slug }}/improve">
+            <textarea class="input textarea" name="feedback" rows="3" placeholder="Describe what should change for future drafts..."></textarea>
+            <input type="hidden" name="actor" value="admin">
+            <button class="btn btn-primary" type="submit" style="margin-top: 8px;">Create Draft Workflow Update</button>
+        </form>
+    </section>
+</div>
+
+<!-- ===== Recent Outputs ===== -->
+<section class="card" style="margin-bottom: 16px;">
+    <h2 style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Recent Outputs</h2>
+    {% if recent_outputs %}
+    <div class="draft-list">
+        {% for output in recent_outputs %}
+        <div class="draft-card platform-{{ output.platform }}">
+            <div class="draft-header">
+                <span class="badge platform-badge platform-{{ output.platform }}">{{ output.platform | upper }}</span>
+                {% if output.state == 'published' %}
+                    <span class="badge badge-success">Published</span>
+                {% elif output.state == 'rejected' %}
+                    <span class="badge badge-danger">Rejected</span>
+                {% elif output.state == 'expired' %}
+                    <span class="badge badge-warning">Expired</span>
+                {% elif output.state == 'manual_ready' %}
+                    <span class="badge badge-info">Pending Review</span>
+                {% elif output.state == 'automatic_ready' %}
+                    <span class="badge badge-info">Auto-Queued</span>
+                {% else %}
+                    <span class="badge badge-muted">{{ output.state | replace('_', ' ') | title }}</span>
+                {% endif %}
+                <span class="text-muted text-small mono" style="margin-left: auto;">{{ output.created_label }}</span>
+            </div>
+            <div class="draft-preview">{{ output.content }}</div>
+            {% if output.hashtags %}
+            <div class="text-muted text-small">{{ output.hashtags | join(' ') }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">No outputs generated yet. This workflow hasn't fired or all outputs have been cleared.</p>
+    {% endif %}
+</section>
+
+<div class="grid-two">
+    <!-- ===== Approved Examples ===== -->
+    <section class="card">
+        <h2 style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Approved Examples</h2>
+        {% if approved_examples %}
+        <ul class="memory-list">
+            {% for item in approved_examples %}
+            <li>
+                <strong>{{ item.title or 'Approved example' }}</strong>
+                <div class="text-muted text-small">{{ item.content[:180] }}{% if item.content|length > 180 %}...{% endif %}</div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">No approved examples yet.</p>
+        {% endif %}
+    </section>
+
+    <!-- ===== Rejected Examples ===== -->
+    <section class="card">
+        <h2 style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Rejected Examples</h2>
+        {% if rejected_examples %}
+        <ul class="memory-list">
+            {% for item in rejected_examples %}
+            <li>
+                <strong>{{ item.title or 'Rejected example' }}</strong>
+                <div class="text-muted text-small">{{ item.content[:180] }}{% if item.content|length > 180 %}...{% endif %}</div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">No rejected examples yet.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Science Credibility</p>
+    <h1>Advisor Spotlights, White Paper Excerpts, and Validation Milestones</h1>
+    <p>Manual-first science content that turns proof into social-ready posts without sounding like marketing copy.</p>
+  </div>
+</section>
+
+<section class="campaign-grid">
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Advisor Spotlight</p>
+      <h2>Feature a science leader</h2>
+    </header>
+    <form hx-post="/api/control-room/science/generate" hx-target="#science-result" hx-swap="innerHTML">
+      <input type="hidden" name="science_type" value="advisor_spotlight">
+      <input type="hidden" name="platform" value="linkedin">
+      <input type="hidden" name="actor" value="science">
+      <label class="input-group">
+        <span>Advisor name</span>
+        <input class="input" type="text" name="advisor_name" placeholder="Dr. Ed Levine">
+      </label>
+      <label class="input-group">
+        <span>Topic</span>
+        <input class="input" type="text" name="topic" placeholder="Why validation matters">
+      </label>
+      <button class="btn btn-primary" type="submit">Generate Spotlight</button>
+    </form>
+  </article>
+
+  <article class="campaign-card">
+    <header>
+      <p class="badge">White Paper</p>
+      <h2>Pull a proof excerpt</h2>
+    </header>
+    <form hx-post="/api/control-room/science/generate" hx-target="#science-result" hx-swap="innerHTML">
+      <input type="hidden" name="science_type" value="white_paper_excerpt">
+      <input type="hidden" name="platform" value="linkedin">
+      <input type="hidden" name="actor" value="science">
+      <label class="input-group">
+        <span>White paper title</span>
+        <input class="input" type="text" name="white_paper_title" placeholder="Clutch Factor validation summary">
+      </label>
+      <label class="input-group">
+        <span>Source focus</span>
+        <input class="input" type="text" name="source_focus" placeholder="Key takeaways from the white paper">
+      </label>
+      <button class="btn btn-primary" type="submit">Generate Excerpt</button>
+    </form>
+  </article>
+
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Milestone</p>
+      <h2>Announce a peer review update</h2>
+    </header>
+    <form hx-post="/api/control-room/science/generate" hx-target="#science-result" hx-swap="innerHTML">
+      <input type="hidden" name="science_type" value="peer_review_milestone">
+      <input type="hidden" name="platform" value="linkedin">
+      <input type="hidden" name="actor" value="science">
+      <label class="input-group">
+        <span>Milestone</span>
+        <input class="input" type="text" name="milestone_name" placeholder="Submission prep complete">
+      </label>
+      <label class="input-group">
+        <span>Topic</span>
+        <input class="input" type="text" name="topic" placeholder="Peer review progress">
+      </label>
+      <button class="btn btn-primary" type="submit">Generate Milestone</button>
+    </form>
+  </article>
+</section>
+
+<section class="card analytics-section mt-4">
+  <div class="section-header">
+    <h2>Recent Science Records</h2>
+    <p class="text-muted">Generated posts and their workflow state</p>
+  </div>
+  <div id="science-result"></div>
+  {% for record in records %}
+  <article class="campaign-card">
+    <p class="badge badge-info">{{ record.science_type }}</p>
+    <h3>{{ record.title }}</h3>
+    <p>{{ record.summary }}</p>
+    <p class="text-muted">{{ record.workflow_slug }} · {{ record.status }}</p>
+  </article>
+  {% else %}
+  <p class="text-muted">No science credibility content has been generated yet.</p>
+  {% endfor %}
+</section>
+{% endblock %}
+

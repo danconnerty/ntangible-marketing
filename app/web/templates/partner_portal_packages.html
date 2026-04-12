@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Partner Portal Packages</title>
+  <link rel="stylesheet" href="/static/css/control_room.css">
+</head>
+<body class="auth-page">
+  <main class="auth-card">
+    <div class="page-header">
+      <p class="eyebrow">Partner Portal</p>
+      <h1>Delivery Packages</h1>
+      <p>{{ partner_slug }}</p>
+    </div>
+    <div class="table-list">
+      {% for bundle in bundles %}
+      <article class="campaign-card">
+        <h2>{{ bundle.platform|upper }}</h2>
+        <p>{{ bundle.status }}</p>
+        <p>{{ bundle.caption }}</p>
+      </article>
+      {% else %}
+      <p class="text-muted">No bundles available yet.</p>
+      {% endfor %}
+    </div>
+  </main>
+</body>
+</html>

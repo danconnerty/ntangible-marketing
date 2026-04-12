@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="page-header">
+  <h1>Sources</h1>
+  <p>Reference content feeding the knowledge graph.</p>
+</header>
+
+{% if sources %}
+<div class="card" style="padding:0;overflow-x:auto;">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Kind</th>
+        <th>URL</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for src in sources %}
+      <tr>
+        <td style="font-weight:500;">{{ src.title }}</td>
+        <td><span class="badge badge-muted">{{ src.kind }}</span></td>
+        <td>
+          {% set url = src.metadata_.get('url', '') if src.metadata_ else '' %}
+          {% if url %}
+            <a href="{{ url }}" target="_blank" rel="noopener" style="font-size:12px;">{{ url[:60] }}{% if url|length > 60 %}...{% endif %}</a>
+          {% else %}
+            <span style="color:var(--muted-foreground);font-size:12px;">&mdash;</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-state-icon">&#x1f4da;</div>
+  <div class="empty-state-title">No sources yet</div>
+  <div class="empty-state-desc">Reference content will appear here once ingested.</div>
+</div>
+{% endif %}
+{% endblock %}

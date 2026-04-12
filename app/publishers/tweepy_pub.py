@@ -2,7 +2,10 @@ import logging
 import time
 from datetime import datetime, timezone
 
-import tweepy
+try:  # pragma: no cover - exercised indirectly in environments without tweepy
+    import tweepy
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    tweepy = None
 
 from app.config import get_settings
 from app.publishers.base import BasePublisher, PostResult
@@ -12,16 +15,19 @@ logger = logging.getLogger(__name__)
 
 
 class TweepyPublisher(BasePublisher):
-    def __init__(self):
+    def __init__(self, *, runtime_config: dict | None = None):
+        if tweepy is None:
+            raise RuntimeError("tweepy is not installed. Use mock publisher or install tweepy.")
         settings = get_settings()
+        runtime_config = runtime_config or {}
         self.client = tweepy.Client(
-            consumer_key=settings.x_api_key,
-            consumer_secret=settings.x_api_secret,
-            access_token=settings.x_access_token,
-            access_token_secret=settings.x_access_token_secret,
+            consumer_key=runtime_config.get("api_key") or settings.x_api_key,
+            consumer_secret=runtime_config.get("api_secret") or settings.x_api_secret,
+            access_token=runtime_config.get("access_token") or settings.x_access_token,
+            access_token_secret=runtime_config.get("access_token_secret") or settings.x_access_token_secret,
         )
 
-    def post_tweet(self, text: str, media: str | None = None) -> PostResult:
+    def publish(self, text: str, media: str | None = None, metadata: dict | None = None) -> PostResult:
         backoff_seconds = [30, 60, 120]
 
         for attempt in range(len(backoff_seconds) + 1):
@@ -30,8 +36,8 @@ class TweepyPublisher(BasePublisher):
                 tweet_id = str(response.data["id"])
                 return PostResult(
                     success=True,
-                    tweet_id=tweet_id,
-                    tweet_url=f"https://x.com/i/status/{tweet_id}",
+                    platform_post_id=tweet_id,
+                    post_url=f"https://x.com/i/status/{tweet_id}",
                     posted_at=datetime.now(timezone.utc).isoformat(),
                 )
             except tweepy.TooManyRequests:
@@ -53,10 +59,10 @@ class TweepyPublisher(BasePublisher):
 
         return PostResult(success=False, error="Exhausted retries")
 
-    def delete_tweet(self, tweet_id: str) -> bool:
+    def delete(self, post_id: str) -> bool:
         try:
-            self.client.delete_tweet(tweet_id)
+            self.client.delete_tweet(post_id)
             return True
         except Exception as exc:  # pragma: no cover - defensive API boundary
-            logger.error("Failed to delete tweet %s: %s", tweet_id, exc)
+            logger.error("Failed to delete tweet %s: %s", post_id, exc)
             return False

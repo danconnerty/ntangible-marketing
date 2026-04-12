@@ -1,0 +1,16 @@
+name: Deploy to Lightsail
+
+on:
+  push:
+    branches: [partner-engine-all]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.LIGHTSAIL_SSH_KEY }}" > ~/.ssh/key.pem
+          chmod 600 ~/.ssh/key.pem
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key.pem ubuntu@${{ secrets.LIGHTSAIL_HOST }} '/home/ubuntu/deploy.sh'

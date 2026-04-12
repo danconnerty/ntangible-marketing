@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+
+<div class="page-header">
+    <h1>Analytics</h1>
+    <p class="text-muted">Content performance and market intelligence</p>
+</div>
+
+{# ====== OVERVIEW METRICS ====== #}
+<section class="card analytics-section">
+    <div class="section-header">
+        <h2>Overview</h2>
+        <p class="text-muted">Last {{ summary.get('window_days', 30) }} days</p>
+    </div>
+
+    <div class="metric-grid">
+        <article class="metric-card">
+            <p class="metric-label">Total Published</p>
+            <p class="metric-value">{{ summary.get('record_count', 0) }}</p>
+            <p class="text-muted text-small">{{ summary.get('workflow_count', 0) }} workflows</p>
+        </article>
+        <article class="metric-card">
+            <p class="metric-label">Avg Engagement</p>
+            <p class="metric-value">{{ "%.1f"|format(summary.get('engagement_percentile', 0) * 100) }}%</p>
+        </article>
+        <article class="metric-card">
+            <p class="metric-label">Approval Rate</p>
+            <p class="metric-value">{{ "%.0f"|format(summary.get('approval_rate', 0) * 100) }}%</p>
+        </article>
+        <article class="metric-card">
+            <p class="metric-label">Avg Content Score</p>
+            <p class="metric-value">{{ "%.1f"|format(summary.get('average_content_score', 0)) }}</p>
+            <p class="text-muted text-small">{{ summary.get('recycle_candidate_count', 0) }} recycle candidates</p>
+        </article>
+        <article class="metric-card">
+            <p class="metric-label">Confidence</p>
+            <p class="metric-value">{{ "%.2f"|format(summary.get('promotion_confidence', 0)) }}</p>
+            <p class="text-muted text-small">{{ summary.get('promotion_recommendation', 'manual_only') }}</p>
+        </article>
+    </div>
+
+    {# --- Bar chart: Posts per platform --- #}
+    <div class="analytics-chart-wrap">
+        <h3 class="analytics-chart-title">Posts Published by Platform</h3>
+        <canvas id="platformChart" height="180"></canvas>
+    </div>
+</section>
+
+{# ====== PLATFORM FILTER TABS + PUBLISHED POSTS ====== #}
+<section class="card analytics-section">
+    <div class="section-header">
+        <h2>Published Content</h2>
+        <span class="count-badge">{{ published_posts|length }}</span>
+    </div>
+
+    <div class="filter-chips" style="margin-bottom:12px;">
+        <a class="chip {% if not selected_platform %}active{% endif %}" href="/control-room/analytics?tab={{ selected_tab }}&metric={{ selected_metric }}&period={{ selected_period }}">All</a>
+        <a class="chip {% if selected_platform == 'linkedin' %}active{% endif %}" href="/control-room/analytics?platform=linkedin&tab={{ selected_tab }}&metric={{ selected_metric }}&period={{ selected_period }}">LinkedIn</a>
+        <a class="chip {% if selected_platform == 'x' %}active{% endif %}" href="/control-room/analytics?platform=x&tab={{ selected_tab }}&metric={{ selected_metric }}&period={{ selected_period }}">X</a>
+        <a class="chip {% if selected_platform == 'instagram' %}active{% endif %}" href="/control-room/analytics?platform=instagram&tab={{ selected_tab }}&metric={{ selected_metric }}&period={{ selected_period }}">Instagram</a>
+        <a class="chip {% if selected_platform == 'newsletter' %}active{% endif %}" href="/control-room/analytics?platform=newsletter&tab={{ selected_tab }}&metric={{ selected_metric }}&period={{ selected_period }}">Newsletter</a>
+    </div>
+
+    {% if published_posts %}
+    <div class="published-post-list">
+        {% for post in published_posts %}
+        <article class="published-post-card platform-{{ post.platform }}">
+            <div class="published-post-header">
+                <span class="platform-badge platform-{{ post.platform }}">{{ post.platform }}</span>
+                <strong class="published-post-workflow">{{ post.workflow_name }}</strong>
+                <span class="published-post-date">{{ post.published_at[:10] if post.published_at else '' }}</span>
+            </div>
+            <div class="published-post-preview">{{ post.content_preview }}</div>
+            <div class="published-post-metrics">
+                <span class="post-metric">
+                    <span class="post-metric-label">Impressions</span>
+                    <span class="post-metric-value">{{ post.impressions }}</span>
+                </span>
+                <span class="post-metric">
+                    <span class="post-metric-label">Engagement</span>
+                    <span class="post-metric-value">{{ "%.1f"|format(post.engagement_rate) }}%</span>
+                </span>
+                <span class="post-metric">
+                    <span class="post-metric-label">Score</span>
+                    <span class="post-metric-value score-pill {% if post.content_score >= 75 %}score-high{% elif post.content_score >= 50 %}score-mid{% else %}score-low{% endif %}">
+                        {{ "%.0f"|format(post.content_score) }}
+                    </span>
+                </span>
+                {% if post.recycle %}
+                <span class="badge badge-info">Recycle</span>
+                {% endif %}
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state mt-3"><p class="text-muted">No published posts yet.</p></div>
+    {% endif %}
+</section>
+
+{# ====== WEEKLY DIGEST ====== #}
+{% if weekly_digest and weekly_digest.total_posts > 0 %}
+<section class="card analytics-section">
+    <div class="section-header">
+        <h2>Weekly Digest</h2>
+        <p class="text-muted">
+            {{ weekly_digest.total_posts }} posts
+            &middot; Avg score {{ "%.1f"|format(weekly_digest.avg_score) }}
+            {% if weekly_digest.period_start and weekly_digest.period_end %}
+            &middot; {{ weekly_digest.period_start[:10] }} &ndash; {{ weekly_digest.period_end[:10] }}
+            {% endif %}
+        </p>
+    </div>
+
+    {# Recommendations #}
+    {% if weekly_digest.recommendations %}
+    <div class="digest-block">
+        <h3>Recommendations</h3>
+        <ul class="digest-recs">
+            {% for rec in weekly_digest.recommendations %}
+            <li>{{ rec }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="digest-columns">
+        {# Top Performers #}
+        {% if weekly_digest.top_performers %}
+        <div class="digest-column">
+            <h3 class="digest-column-title digest-good">Top Performers</h3>
+            <div class="table-list">
+                {% for post in weekly_digest.top_performers %}
+                <article class="analytics-row">
+                    <div style="flex:3">
+                        <span class="platform-badge platform-{{ post.platform }}">{{ post.platform }}</span>
+                        <span class="text-small text-muted" style="margin-left:6px;">{{ post.content_preview[:80] }}{% if post.content_preview|length > 80 %}...{% endif %}</span>
+                    </div>
+                    <div style="flex:1;text-align:right;">
+                        <span class="score-pill {% if post.content_score >= 75 %}score-high{% elif post.content_score >= 50 %}score-mid{% else %}score-low{% endif %}">
+                            {{ "%.0f"|format(post.content_score) }}
+                        </span>
+                        {% if post.recycle_recommended %}
+                        <span class="badge badge-info" style="margin-left:4px;">recycle</span>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# Underperformers #}
+        {% if weekly_digest.underperformers %}
+        <div class="digest-column">
+            <h3 class="digest-column-title digest-warn">Underperformers</h3>
+            <div class="table-list">
+                {% for post in weekly_digest.underperformers %}
+                <article class="analytics-row">
+                    <div style="flex:3">
+                        <span class="platform-badge platform-{{ post.platform }}">{{ post.platform }}</span>
+                        <span class="text-small text-muted" style="margin-left:6px;">{{ post.content_preview[:80] }}{% if post.content_preview|length > 80 %}...{% endif %}</span>
+                    </div>
+                    <div style="flex:1;text-align:right;">
+                        <span class="score-pill score-low">{{ "%.0f"|format(post.content_score) }}</span>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {# Platform Breakdown + Intent Split #}
+    <div class="digest-columns">
+        {% if weekly_digest.platform_breakdown %}
+        <div class="digest-column">
+            <h3>Platform Breakdown</h3>
+            <div class="table-list">
+                {% for plat in weekly_digest.platform_breakdown %}
+                <article class="analytics-row">
+                    <div style="flex:1"><span class="platform-badge platform-{{ plat.platform }}">{{ plat.platform }}</span></div>
+                    <div style="flex:1">{{ plat.post_count }} posts</div>
+                    <div style="flex:1">Avg {{ "%.1f"|format(plat.avg_score) }}</div>
+                    <div style="flex:1">{{ plat.recycle_candidates }} recyclable</div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if weekly_digest.intent_split %}
+        <div class="digest-column">
+            <h3>Intent Split</h3>
+            <div class="table-list">
+                {% for intent, pct in weekly_digest.intent_split.items() %}
+                <article class="analytics-row">
+                    <div style="flex:1"><strong>{{ intent|capitalize }}</strong></div>
+                    <div style="flex:1">{{ "%.1f"|format(pct) }}%</div>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% elif weekly_digest %}
+<section class="card analytics-section">
+    <div class="section-header">
+        <h2>Weekly Digest</h2>
+    </div>
+    <div class="empty-state mt-3"><p class="text-muted">No posts published in the last 7 days.</p></div>
+</section>
+{% endif %}
+
+{# ====== WORKFLOW HEALTH ====== #}
+<section class="card analytics-section">
+    <div class="section-header">
+        <h2>Workflow Health</h2>
+    </div>
+    {% if workflow_metrics %}
+    <table class="table table-compact">
+        <thead>
+            <tr>
+                <th>Workflow</th>
+                <th>Platform</th>
+                <th>Published</th>
+                <th>Approval</th>
+                <th>Engagement</th>
+                <th>Score</th>
+                <th>Recycle</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in workflow_metrics %}
+            <tr>
+                <td><strong>{{ item.get('workflow_name', 'Unknown') }}</strong></td>
+                <td><span class="platform-badge platform-{{ item.get('platform', '') }}">{{ item.get('platform', '---') }}</span></td>
+                <td>{{ item.get('record_count', 0) }}</td>
+                <td>{{ "%.0f"|format(item.get('approval_rate', 0) * 100) }}%</td>
+                <td>{{ "%.1f"|format(item.get('engagement_percentile', 0) * 100) }}%</td>
+                <td>{{ "%.1f"|format(item.get('average_content_score', 0)) }}</td>
+                <td>{{ item.get('recycle_candidate_count', 0) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state mt-3"><p class="text-muted">No workflow metrics captured yet.</p></div>
+    {% endif %}
+</section>
+
+{# ====== COMPETITOR MONITOR ====== #}
+<section class="card analytics-section">
+    <div class="section-header">
+        <h2>Competitor Monitor</h2>
+        <p class="text-muted">External signals and market activity</p>
+    </div>
+    {% if signals %}
+    <div class="table-list">
+        {% for signal in signals %}
+        <article class="campaign-card">
+            <header>
+                <strong>{{ signal.source_name }}</strong>
+                <span class="badge badge-warning">{{ signal.signal_type }}</span>
+            </header>
+            <p>{{ signal.summary }}</p>
+            <p class="text-muted" style="font-family:monospace;font-size:0.85rem;">{{ signal.detected_at or signal.created_at }}</p>
+            <form
+                hx-post="/control-room/competitors/signals/{{ signal.id }}/respond"
+                hx-target="#signal-result-{{ signal.id }}"
+                hx-swap="innerHTML"
+            >
+                <button class="btn btn-primary" type="submit">Create Response</button>
+            </form>
+            <div id="signal-result-{{ signal.id }}"></div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state mt-3"><p class="text-muted">No competitor signals detected recently.</p></div>
+    {% endif %}
+</section>
+
+{# ====== SALES & REVENUE ====== #}
+<section class="card analytics-section">
+    <div class="section-header">
+        <h2>Sales & Revenue</h2>
+        <p class="text-muted">Revenue playbooks, conversion goals, and execution history</p>
+    </div>
+
+    {% if playbooks %}
+    <div class="section-header" style="margin-top:1rem;">
+        <h3>Playbooks</h3>
+    </div>
+    <div class="campaign-grid">
+        {% for playbook in playbooks %}
+        <article class="campaign-card">
+            <header>
+                <strong>{{ playbook.name }}</strong>
+                <span class="badge badge-info">{{ playbook.persona }}</span>
+                {% if not playbook.active %}
+                <span class="badge badge-muted">inactive</span>
+                {% endif %}
+            </header>
+            <p class="text-muted">{{ playbook.playbook_type }}</p>
+            <p><strong>Offer:</strong> {{ playbook.offer }}</p>
+            <p><strong>CTA:</strong> {{ playbook.cta }}</p>
+            <form
+                hx-post="/control-room/analytics/run-playbook"
+                hx-target="#playbook-result-{{ playbook.slug }}"
+                hx-swap="innerHTML"
+                hx-indicator="#playbook-spinner-{{ playbook.slug }}"
+            >
+                <input type="hidden" name="playbook_slug" value="{{ playbook.slug }}">
+                <button class="btn btn-primary btn-sm" type="submit">Run Playbook</button>
+                <span id="playbook-spinner-{{ playbook.slug }}" class="htmx-indicator">Running...</span>
+            </form>
+            <div id="playbook-result-{{ playbook.slug }}"></div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state mt-3"><p class="text-muted">No revenue playbooks configured yet.</p></div>
+    {% endif %}
+
+    {% if conversion_goals %}
+    <div class="section-header" style="margin-top:1.5rem;">
+        <h3>Conversion Goals</h3>
+    </div>
+    <div class="table-list">
+        {% for goal in conversion_goals %}
+        <article class="analytics-row">
+            <div style="flex:2">
+                <strong>{{ goal.name }}</strong>
+                <p class="text-muted">{{ goal.metric_type }}</p>
+            </div>
+            <div style="flex:1">
+                <span class="badge {% if goal.active %}badge-success{% else %}badge-muted{% endif %}">
+                    {{ "active" if goal.active else "inactive" }}
+                </span>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state mt-3"><p class="text-muted">No conversion goals configured yet.</p></div>
+    {% endif %}
+
+    {% if executions %}
+    <div class="section-header" style="margin-top:1.5rem;">
+        <h3>Recent Executions</h3>
+    </div>
+    <div class="table-list">
+        <article class="analytics-row" style="font-weight:600;">
+            <div style="flex:2">Playbook</div>
+            <div style="flex:1">Source</div>
+            <div style="flex:1">Status</div>
+        </article>
+        {% for execution in executions %}
+        <article class="analytics-row">
+            <div style="flex:2">
+                <strong>{{ execution.summary.get('playbook_slug', execution.revenue_playbook_id) if execution.summary else execution.revenue_playbook_id }}</strong>
+                <p class="text-muted">{{ execution.summary.get('playbook_type', '') if execution.summary else '' }}</p>
+            </div>
+            <div style="flex:1">{{ execution.source_kind }}</div>
+            <div style="flex:1">
+                <span class="badge {% if execution.status == 'completed' or execution.status == 'draft_ready' %}badge-success{% elif execution.status == 'failed' %}badge-danger{% else %}badge-info{% endif %}">
+                    {{ execution.status }}
+                </span>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state mt-3"><p class="text-muted">No revenue executions recorded yet.</p></div>
+    {% endif %}
+</section>
+
+{# ====== CHART.JS INIT ====== #}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var ctx = document.getElementById("platformChart");
+    if (!ctx) return;
+
+    var platformCounts = {{ platform_counts | tojson }};
+    var platforms = ["linkedin", "x", "instagram", "newsletter"];
+    var platformLabels = ["LinkedIn", "X", "Instagram", "Newsletter"];
+    var platformColors = [
+        "rgba(37, 99, 235, 0.85)",
+        "rgba(26, 26, 42, 0.75)",
+        "rgba(225, 48, 108, 0.85)",
+        "rgba(22, 163, 74, 0.85)"
+    ];
+    var platformBorders = [
+        "rgb(37, 99, 235)",
+        "rgb(26, 26, 42)",
+        "rgb(225, 48, 108)",
+        "rgb(22, 163, 74)"
+    ];
+
+    var data = platforms.map(function (p) { return platformCounts[p] || 0; });
+
+    new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: platformLabels,
+            datasets: [{
+                label: "Posts Published",
+                data: data,
+                backgroundColor: platformColors,
+                borderColor: platformBorders,
+                borderWidth: 1,
+                borderRadius: 4,
+                maxBarThickness: 64
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0, font: { size: 11 } },
+                    grid: { color: "rgba(0,0,0,0.04)" }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 12, weight: "500" } }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

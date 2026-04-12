@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="page-header">
+  <h1>Knowledge</h1>
+  <p>Browse and filter knowledge nodes in the brain.</p>
+</header>
+
+<form method="get" action="/control-room/brain/knowledge" class="card" style="margin-bottom:16px;">
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+    <select class="input" name="kind" onchange="this.form.submit()" style="min-width:160px;">
+      <option value="">All kinds</option>
+      {% for k in all_kinds %}
+        <option value="{{ k }}" {% if filter_kind == k %}selected{% endif %}>{{ k }}</option>
+      {% endfor %}
+    </select>
+    <select class="input" name="status" onchange="this.form.submit()" style="min-width:160px;">
+      <option value="">All statuses</option>
+      {% for s in all_statuses %}
+        <option value="{{ s }}" {% if filter_status == s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</form>
+
+{% if nodes %}
+<div class="card" style="padding:0;overflow-x:auto;">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Kind</th>
+        <th>Status</th>
+        <th>Confidence</th>
+        <th>Created</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for node in nodes %}
+      <tr>
+        <td style="font-weight:500;">{{ node.title }}</td>
+        <td><span class="badge badge-muted">{{ node.kind }}</span></td>
+        <td>
+          {% if node.status == 'active' %}
+            <span class="badge badge-success">{{ node.status }}</span>
+          {% elif node.status == 'pending' %}
+            <span class="badge badge-warning">{{ node.status }}</span>
+          {% elif node.status == 'rejected' %}
+            <span class="badge badge-danger">{{ node.status }}</span>
+          {% else %}
+            <span class="badge badge-muted">{{ node.status }}</span>
+          {% endif %}
+        </td>
+        <td>
+          {% set conf_pct = (node.confidence * 100)|int %}
+          <span style="font-family:var(--font-mono);font-size:12px;{% if conf_pct >= 80 %}color:var(--success){% elif conf_pct >= 50 %}color:var(--warning){% else %}color:var(--destructive){% endif %};">
+            {{ conf_pct }}%
+          </span>
+        </td>
+        <td style="font-size:12px;color:var(--muted-foreground);white-space:nowrap;">
+          {{ node.created_at.strftime('%b %d, %H:%M') if node.created_at else '' }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-state-icon">&#x1f9e0;</div>
+  <div class="empty-state-title">No knowledge nodes</div>
+  <div class="empty-state-desc">No knowledge nodes match the current filters.</div>
+</div>
+{% endif %}
+{% endblock %}

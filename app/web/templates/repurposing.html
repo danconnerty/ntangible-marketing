@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Phase 7+</p>
+    <h1>Repurposing Engine</h1>
+    <p>One content nucleus becomes multiple downstream drafts across current channels and blog.</p>
+  </div>
+</section>
+
+<section class="campaign-grid">
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Fan Out</p>
+      <h2>Source-to-derivative run</h2>
+    </header>
+    <form
+      hx-post="/api/control-room/repurposing/sources/manual/seed/fanout"
+      hx-target="#repurposing-result"
+      hx-swap="innerHTML"
+    >
+      <input type="hidden" name="title" value="Manual source nucleus">
+      <input type="hidden" name="source_text" value="One nucleus content piece for the repurposing engine.">
+      <input type="hidden" name="source_platform" value="linkedin">
+      <input type="hidden" name="actor" value="planner">
+      <button class="btn btn-primary" type="submit">Create Derivatives</button>
+    </form>
+    <div id="repurposing-result"></div>
+  </article>
+
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Sources</p>
+      <h2>Recent Sources</h2>
+    </header>
+    <div class="table-list">
+      {% for source in sources %}
+      <article class="analytics-row">
+        <div>
+          <strong>{{ source.title }}</strong>
+          <p class="text-muted">{{ source.source_kind }} · {{ source.channel }}</p>
+        </div>
+      </article>
+      {% else %}
+      <p class="text-muted">No repurposing sources yet.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="analytics-section">
+  <div class="section-header">
+    <h2>Derivatives</h2>
+    <p class="text-muted">Current-platform jobs and blog drafts created from a nucleus source.</p>
+  </div>
+  <div class="table-list">
+    {% for derivative in derivatives %}
+    <article class="card">
+      <div class="draft-meta">
+        <span class="badge badge-info">{{ derivative.channel }}</span>
+        <span class="badge">{{ derivative.status }}</span>
+      </div>
+      <h3>{{ derivative.title }}</h3>
+      <p class="text-muted">{{ derivative.content[:220] }}{% if derivative.content|length > 220 %}…{% endif %}</p>
+    </article>
+    {% else %}
+    <p class="text-muted">No derivatives generated yet.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

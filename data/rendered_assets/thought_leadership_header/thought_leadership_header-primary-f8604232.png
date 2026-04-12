@@ -1,0 +1,19 @@
+{
+  "mock": true,
+  "template_family": "thought_leadership_header",
+  "brand_mode": "owned",
+  "canva_template_id": "pending_setup",
+  "configured_template_id": "pending_setup",
+  "expected_data_fields": [
+    "headline",
+    "subtitle"
+  ],
+  "text_fields": {
+    "headline": "The Military Figured Out Pressure Performance Before Sports Did",
+    "subtitle": "Dr. Jacob Hyde's Naval Special Warfare research is now inside NTangible's assessment framework."
+  },
+  "numeric_fields": {},
+  "image_references": [],
+  "asset_role": "primary",
+  "title": "LinkedIn Thought Leadership"
+}

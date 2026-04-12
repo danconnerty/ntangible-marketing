@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h1>Control Room Settings</h1>
+    <p class="text-muted">Operational controls, auth mode, scheduler health, and publisher wiring.</p>
+</div>
+
+<section class="metric-grid">
+  <article class="card">
+    <p class="eyebrow">Timezone</p>
+    <p class="metric-value">{{ summary.timezone }}</p>
+  </article>
+  <article class="card">
+    <p class="eyebrow">Access</p>
+    <p class="metric-value">{% if summary.auth_required %}Session login required{% else %}Session login disabled{% endif %}</p>
+  </article>
+  <article class="card">
+    <p class="eyebrow">Paused Workflows</p>
+    <p class="metric-value">{{ summary.scheduler_status.paused_workflows }}</p>
+  </article>
+  <article class="card">
+    <p class="eyebrow">Upcoming Auto</p>
+    <p class="metric-value">{{ summary.scheduler_status.upcoming_24h }}</p>
+  </article>
+</section>
+
+<section class="campaign-grid">
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Scheduler</p>
+      <h2>Automatic Controls</h2>
+    </header>
+    <p class="text-muted">Use these controls when operations needs to pause or resume the timed publishing layer across every automatic workflow.</p>
+    <div class="draft-actions">
+      <form hx-post="/control-room/settings/actions" hx-target="#settings-action-result" hx-swap="innerHTML">
+        <input type="hidden" name="action" value="pause_all">
+        <button class="btn btn-danger" type="submit">Pause All Automatic Workflows</button>
+      </form>
+      <form hx-post="/control-room/settings/actions" hx-target="#settings-action-result" hx-swap="innerHTML">
+        <input type="hidden" name="action" value="resume_all">
+        <button class="btn btn-primary" type="submit">Resume All Automatic Workflows</button>
+      </form>
+    </div>
+    <div id="settings-action-result"></div>
+  </article>
+
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Publishers</p>
+      <h2>Active Providers</h2>
+    </header>
+    <ul class="asset-list">
+      {% for platform, publisher in summary.publishers.items() %}
+      <li><strong>{{ platform|upper }}</strong>: {{ publisher }}</li>
+      {% endfor %}
+    </ul>
+    <p class="text-muted">{{ summary.legacy_mode_note }}</p>
+  </article>
+</section>
+
+<section class="campaign-grid">
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Connections</p>
+      <h2>Connected Accounts</h2>
+    </header>
+    {% if summary.connections %}
+    <div class="draft-list">
+      {% for connection in summary.connections %}
+      <article class="card">
+        <div class="card-header">
+          <h3>{{ connection.connection_label or connection.channel|upper }}</h3>
+          <span class="badge">{{ connection.status }}</span>
+        </div>
+        <p class="text-muted"><strong>Channel:</strong> {{ connection.channel|upper }} | <strong>Provider:</strong> {{ connection.provider_key }}</p>
+        <p class="text-muted"><strong>Active destination:</strong> {{ connection.active_destination_label or "None selected" }}</p>
+        {% if connection.destinations %}
+        <ul class="asset-list">
+          {% for destination in connection.destinations %}
+          <li>
+            <strong>{{ destination.label }}</strong>{% if destination.is_active %} (Active){% endif %}
+            <span class="draft-actions">
+              {% if not destination.is_active %}
+              <form hx-post="/control-room/settings/destinations/{{ destination.id }}/activate" hx-target="#settings-destination-result" hx-swap="innerHTML">
+                <input type="hidden" name="channel" value="{{ connection.channel }}">
+                <button class="btn btn-secondary" type="submit">Make Active</button>
+              </form>
+              {% endif %}
+              <form hx-post="/control-room/settings/destinations/{{ destination.id }}/delete" hx-target="#settings-destination-result" hx-swap="innerHTML">
+                <input type="hidden" name="channel" value="{{ connection.channel }}">
+                <button class="btn btn-danger" type="submit">Remove</button>
+              </form>
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">No connected accounts configured yet.</p>
+    {% endif %}
+  </article>
+
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Manage</p>
+      <h2>Save Connection</h2>
+    </header>
+    <form class="stacked-form" hx-post="/control-room/settings/connections" hx-target="#settings-connection-result" hx-swap="innerHTML">
+      <label>Channel <input type="text" name="channel" value="linkedin"></label>
+      <label>Provider <input type="text" name="provider_key" value="linkedin"></label>
+      <label>Auth Mode <input type="text" name="auth_mode" value="oauth"></label>
+      <label>Label <input type="text" name="connection_label" placeholder="NTangible LinkedIn"></label>
+      <label>Status <input type="text" name="status" value="connected"></label>
+      <label>Config JSON <textarea name="config_json" rows="3">{}</textarea></label>
+      <label>Credential JSON <textarea name="credential_json" rows="3">{}</textarea></label>
+      <button class="btn btn-primary" type="submit">Save Connection</button>
+    </form>
+    <div id="settings-connection-result"></div>
+  </article>
+</section>
+
+<section class="campaign-grid">
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Destinations</p>
+      <h2>Add Destination</h2>
+    </header>
+    <form class="stacked-form" hx-post="/control-room/settings/destinations" hx-target="#settings-destination-result" hx-swap="innerHTML">
+      <label>Channel <input type="text" name="channel" value="linkedin"></label>
+      <label>External ID <input type="text" name="external_id" placeholder="urn:li:organization:123"></label>
+      <label>Destination Type <input type="text" name="destination_type" value="organization"></label>
+      <label>Label <input type="text" name="label" placeholder="NTangible Main Page"></label>
+      <label>Config JSON <textarea name="config_json" rows="3">{}</textarea></label>
+      <label><input type="checkbox" name="activate" value="true"> Make active</label>
+      <button class="btn btn-primary" type="submit">Add Destination</button>
+    </form>
+    <div id="settings-destination-result"></div>
+  </article>
+</section>
+{% endblock %}

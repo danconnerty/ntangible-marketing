@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Phase 11</p>
+    <h1>Video</h1>
+    <p>Script briefs for founder videos, reels from static proof, and testimonial-ready motion concepts.</p>
+  </div>
+</section>
+
+<section class="campaign-grid">
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Brief Builder</p>
+      <h2>Create a Video Brief</h2>
+    </header>
+    <form hx-post="/control-room/video/briefs" hx-target="#video-brief-result" hx-swap="innerHTML">
+      <label>Kind <input class="input" name="kind" value="founder_raw"></label>
+      <label>Platform <input class="input" name="target_platform" value="linkedin"></label>
+      <label>Title <input class="input" name="title" placeholder="Founder raw video brief"></label>
+      <label>Audience <input class="input" name="audience" placeholder="coaches, athletes, partners"></label>
+      <label>CTA <input class="input" name="cta" placeholder="Thoughts?"></label>
+      <label>Context <textarea class="input textarea" name="context" rows="5"></textarea></label>
+      <button class="btn btn-primary" type="submit">Generate Brief</button>
+    </form>
+    <div id="video-brief-result"></div>
+  </article>
+
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Briefs</p>
+      <h2>Recent Video Briefs</h2>
+    </header>
+    <div class="table-list">
+      {% for brief in briefs %}
+      <article class="analytics-row">
+        <div>
+          <strong>{{ brief.title }}</strong>
+          <p class="text-muted">{{ brief.kind }} · {{ brief.platform }} · {{ brief.brief_format }}</p>
+          <p>{{ brief.hook }}</p>
+        </div>
+        <span class="badge badge-info">{{ brief.status }}</span>
+      </article>
+      {% else %}
+      <p class="text-muted">No video briefs generated yet.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+{% endblock %}

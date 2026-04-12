@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Partner Portal Submit</title>
+  <link rel="stylesheet" href="/static/css/control_room.css">
+  <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+</head>
+<body class="auth-page">
+  <main class="auth-card">
+    <div class="page-header">
+      <p class="eyebrow">Partner Portal</p>
+      <h1>Submit Event</h1>
+      <p>Logged in as {{ partner_slug }}</p>
+    </div>
+    <form hx-post="/partner-portal/submit" hx-target="#partner-submit-result" hx-swap="innerHTML" class="auth-form">
+      <input type="hidden" name="partner_slug" value="{{ partner_slug }}">
+      <label>
+        Event Type
+        <input class="input" type="text" name="event_type" value="assessment_completed" required>
+      </label>
+      <label>
+        External Event ID
+        <input class="input" type="text" name="external_event_id" value="evt-portal-1" required>
+      </label>
+      <button class="btn btn-primary" type="submit">Submit</button>
+    </form>
+    <div id="partner-submit-result"></div>
+    <a class="sidebar-link" href="/partner-portal/packages">View Packages</a>
+  </main>
+</body>
+</html>

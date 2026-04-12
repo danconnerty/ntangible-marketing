@@ -1,0 +1,65 @@
+<div class="panel-section">
+    <div class="page-header">
+        <h2>{% if panel.focus == "improve" %}Improve Workflow{% else %}Why This Draft?{% endif %}</h2>
+        <p class="text-muted">{{ panel.workflow_name }}{% if panel.version_number %} · v{{ panel.version_number }}{% endif %}</p>
+    </div>
+
+    <div class="card mt-3">
+        <div class="draft-meta">
+            <span class="badge badge-info">{{ panel.platform }}</span>
+            <span class="badge badge-muted">{{ panel.trigger_label }}</span>
+        </div>
+        <div class="draft-content mt-2">{{ panel.content }}</div>
+        {% if panel.hashtags %}
+        <div class="draft-hashtags text-muted text-small mt-2">{{ panel.hashtags | join(' ') }}</div>
+        {% endif %}
+    </div>
+
+    <div class="card mt-3">
+        <h3>Trigger Reason</h3>
+        <p>{{ panel.trigger_reason }}</p>
+        {% if panel.trigger_payload %}
+        <pre class="code-block">{{ panel.trigger_payload }}</pre>
+        {% endif %}
+    </div>
+
+    <div class="card mt-3">
+        <h3>Compliance</h3>
+        <pre class="code-block">{{ panel.compliance_result }}</pre>
+    </div>
+
+    <div class="card mt-3">
+        <h3>Prompt Snapshot</h3>
+        <pre class="code-block">{{ panel.prompt_snapshot }}</pre>
+    </div>
+
+    {% if panel.asset_items %}
+    <div class="card mt-3">
+        <h3>Assets</h3>
+        <ul class="asset-list">
+            {% for asset in panel.asset_items %}
+            <li>{{ asset.filename or asset.asset_type }}{% if asset.render_status %} · {{ asset.render_status }}{% endif %}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if panel.focus == "improve" %}
+    <div class="card mt-3">
+        <h3>Improve Workflow</h3>
+        <p class="text-muted">Describe what should change for future drafts. Claude updates the workflow recipe, not just this post.</p>
+        <form
+            class="mt-2"
+            hx-post="/control-room/workflows/{{ panel.workflow_slug }}/improve"
+            hx-target="#drawer-content"
+            hx-swap="innerHTML"
+        >
+            <input type="hidden" name="actor" value="admin">
+            <input type="hidden" name="draft_id" value="{{ panel.id }}">
+            <textarea class="input textarea" name="feedback" placeholder="Example: too corporate, use more hard data, shorter paragraphs, and a stronger hook."></textarea>
+            <button class="btn btn-primary mt-2" type="submit">Create Workflow Proposal</button>
+        </form>
+        <a class="btn btn-ghost mt-2" href="/control-room/workflows/{{ panel.workflow_slug }}">Open Full Workflow View</a>
+    </div>
+    {% endif %}
+</div>

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="page-header">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+    <a href="/control-room/brain/topics" style="color:var(--muted-foreground);text-decoration:none;font-size:13px;">Topics</a>
+    <span style="color:var(--muted-foreground);font-size:13px;">/</span>
+  </div>
+  <h1>{{ topic.display_name }}</h1>
+  {% if topic.description %}
+    <p>{{ topic.description }}</p>
+  {% endif %}
+</header>
+
+<!-- Stats row -->
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-icon stat-icon-blue">
+      <img src="https://unpkg.com/lucide-static@latest/icons/network.svg" alt="" style="width:20px;height:20px;">
+    </div>
+    <div class="stat-value">{{ entities|length }}</div>
+    <div class="stat-label">Entities</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon stat-icon-emerald">
+      <img src="https://unpkg.com/lucide-static@latest/icons/brain.svg" alt="" style="width:20px;height:20px;">
+    </div>
+    <div class="stat-value">{{ knowledge|length }}</div>
+    <div class="stat-label">Knowledge</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon stat-icon-violet">
+      <img src="https://unpkg.com/lucide-static@latest/icons/git-branch.svg" alt="" style="width:20px;height:20px;">
+    </div>
+    <div class="stat-value">{{ edges|length }}</div>
+    <div class="stat-label">Relationships</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon stat-icon-amber">
+      <img src="https://unpkg.com/lucide-static@latest/icons/database.svg" alt="" style="width:20px;height:20px;">
+    </div>
+    <div class="stat-value">{{ source_count }}</div>
+    <div class="stat-label">Sources</div>
+  </div>
+</div>
+
+<!-- Entities section -->
+{% if entities %}
+<section style="margin-top:24px;">
+  <div class="section-header">
+    <h2>Entities</h2>
+    <span class="count">{{ entities|length }}</span>
+  </div>
+  <div class="grid-two" style="gap:12px;">
+    {% for entity in entities %}
+    <div class="card" style="padding:14px 16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        {% set type_colors = {
+          'workflow': '#3b82f6',
+          'partner': '#22c55e',
+          'client': '#10b981',
+          'competitor': '#f97316',
+          'publishing_channel': '#8b5cf6',
+          'content_pillar': '#eab308'
+        } %}
+        {% set badge_color = type_colors.get(entity.entity_type, '#3b82f6') %}
+        <span style="display:inline-block;padding:2px 10px;border-radius:9999px;font-size:11px;font-weight:600;background:{{ badge_color }}20;color:{{ badge_color }};">{{ entity.entity_type }}</span>
+        <span style="font-weight:600;font-size:14px;color:var(--foreground);">{{ entity.canonical_name }}</span>
+      </div>
+      {% if entity.description %}
+        <p style="margin:0;font-size:12px;color:var(--muted-foreground);line-height:1.5;">{{ entity.description }}</p>
+      {% endif %}
+      <div style="margin-top:6px;font-size:11px;color:var(--muted-foreground);">
+        <span class="badge badge-muted">{{ entity.status }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Knowledge section -->
+{% if knowledge %}
+<section style="margin-top:24px;">
+  <div class="section-header">
+    <h2>Knowledge</h2>
+    <span class="count">{{ knowledge|length }}</span>
+  </div>
+  <div class="draft-list">
+    {% for node in knowledge %}
+    <div class="card" style="padding:14px 16px;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        {% set kind_colors = {
+          'draft': '#f43f5e',
+          'approved_claim': '#14b8a6',
+          'reference_content': '#64748b',
+          'schedule_rule': '#eab308',
+          'observation': '#f97316'
+        } %}
+        {% set kind_color = kind_colors.get(node.kind, '#f43f5e') %}
+        <span style="display:inline-block;padding:2px 10px;border-radius:9999px;font-size:11px;font-weight:600;background:{{ kind_color }}20;color:{{ kind_color }};">{{ node.kind }}</span>
+        <span style="font-weight:600;font-size:14px;color:var(--foreground);">{{ node.title }}</span>
+      </div>
+      {% if node.content %}
+        <p style="margin:0 0 10px;font-size:12px;color:var(--muted-foreground);line-height:1.5;">{{ node.content[:200] }}{% if node.content|length > 200 %}...{% endif %}</p>
+      {% endif %}
+      <div style="display:flex;align-items:center;gap:16px;">
+        {% set pct = (node.confidence * 100)|int %}
+        {% if pct >= 80 %}
+          {% set bar_color = '#22c55e' %}
+        {% elif pct >= 50 %}
+          {% set bar_color = '#eab308' %}
+        {% else %}
+          {% set bar_color = '#ef4444' %}
+        {% endif %}
+        <div style="flex:1;max-width:200px;">
+          <div style="font-size:10px;color:var(--muted-foreground);margin-bottom:3px;">Confidence {{ pct }}%</div>
+          <div style="width:100%;height:5px;border-radius:3px;background:var(--muted);">
+            <div style="width:{{ pct }}%;height:100%;border-radius:3px;background:{{ bar_color }};"></div>
+          </div>
+        </div>
+        <span style="font-size:11px;color:var(--muted-foreground);">Trust: {{ "%.2f"|format(node.trust_score) }}</span>
+        <span class="badge badge-muted">{{ node.status }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Relationships section -->
+{% if edges %}
+<section style="margin-top:24px;">
+  <div class="section-header">
+    <h2>Relationships</h2>
+    <span class="count">{{ edges|length }}</span>
+  </div>
+  <div class="draft-list">
+    {% for edge in edges %}
+    <div class="card" style="padding:10px 16px;display:flex;align-items:center;gap:12px;font-size:13px;">
+      <span style="font-weight:600;color:var(--foreground);">{{ edge.source_name }}</span>
+      <span style="color:var(--muted-foreground);font-size:11px;padding:2px 8px;border-radius:9999px;background:var(--muted);">{{ edge.relation }}</span>
+      <span style="font-weight:600;color:var(--foreground);">{{ edge.target_name }}</span>
+      {% if edge.confidence is not none %}
+        <span style="margin-left:auto;font-size:11px;color:var(--muted-foreground);">{{ "%.0f"|format(edge.confidence * 100) }}%</span>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if not entities and not knowledge and not edges %}
+<div class="empty-state">
+  <div class="empty-state-icon">&#x1f50d;</div>
+  <div class="empty-state-title">No data yet</div>
+  <div class="empty-state-desc">This topic has no entities, knowledge, or relationships yet.</div>
+</div>
+{% endif %}
+{% endblock %}

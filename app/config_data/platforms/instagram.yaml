@@ -1,0 +1,36 @@
+instagram:
+  max_caption_chars: 2200
+  min_hashtags: 6
+  max_hashtags: 10
+  auto_publish_default_tier: tier_1
+  posting_windows_et:
+    - Tue-Fri 11:00-13:00
+    - Tue-Fri 19:00-21:00
+  template_families:
+    athlete_spotlight:
+      min_slides: 1
+      max_slides: 1
+    commitment_post:
+      min_slides: 1
+      max_slides: 1
+    clutch_certified:
+      min_slides: 1
+      max_slides: 1
+    event_leaderboard:
+      min_slides: 1
+      max_slides: 1
+    bold_statement:
+      min_slides: 1
+      max_slides: 1
+    education_carousel:
+      min_slides: 5
+      max_slides: 8
+    story_poll:
+      min_slides: 1
+      max_slides: 3
+    story_repost:
+      min_slides: 1
+      max_slides: 3
+    partner_event_spotlight:
+      min_slides: 1
+      max_slides: 8

@@ -6,3 +6,8 @@ dist/
 .venv/
 .pytest_cache/
 htmlcov/
+data/content_brain/raw/
+data/content_brain/normalized/
+data/content_brain/runs/
+.superpowers/
+.playwright-mcp/

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block content %}
+{# Date + status line #}
+<header class="page-header">
+  <h1>{{ today_date or "Dashboard" }}</h1>
+  <p class="text-muted">
+    {{ today_activity.published_count or 0 }} published today
+    {%- if manual_drafts %} &middot; <strong>{{ manual_drafts|length }} needs review</strong>{% endif %}
+    {%- if today_activity.failed_count %} &middot; <span style="color:var(--danger);">{{ today_activity.failed_count }} failed</span>{% endif %}
+    {%- if paused_workflow_count %} &middot; {{ paused_workflow_count }} workflows paused{% endif %}
+  </p>
+</header>
+
+{# -- Signal-triggered events (external/partner) -- shown at top if any exist -- #}
+{% set signal_items = today_activity['items'] | selectattr('source', 'equalto', 'external') | list %}
+{% if signal_items %}
+<section style="margin-bottom:20px;">
+  <div class="section-header">
+    <h2 style="font-size:15px;">External Signals <span class="count-badge">{{ signal_items|length }}</span></h2>
+    <span class="text-muted text-small">Partner events and external triggers</span>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;">
+    {% for item in signal_items %}
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:8px 14px;font-size:13px;">
+      <span class="timeline-dot triggered" style="flex-shrink:0;"></span>
+      {% if item.platform %}<span class="platform-badge platform-{{ item.platform }}" style="font-size:9px;">{{ item.platform }}</span>{% endif %}
+      <span>{{ item.title }}</span>
+      <time class="text-muted text-small font-mono" style="margin-left:auto;">{{ item.time }}</time>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<div class="dashboard-grid">
+
+  {# -- Left column: Needs Review -- #}
+  <section class="dashboard-review" x-data="{ filter: 'all' }">
+    <div class="section-header">
+      <h2>Needs Review {% if manual_drafts %}<span class="count-badge">{{ manual_drafts|length }}</span>{% endif %}</h2>
+    </div>
+
+    <div class="filter-chips" style="margin-bottom:12px;">
+      <button class="chip" :class="{ active: filter === 'all' }" @click="filter = 'all'">All</button>
+      <button class="chip" :class="{ active: filter === 'linkedin' }" @click="filter = 'linkedin'">LinkedIn</button>
+      <button class="chip" :class="{ active: filter === 'x' }" @click="filter = 'x'">X</button>
+      <button class="chip" :class="{ active: filter === 'instagram' }" @click="filter = 'instagram'">Instagram</button>
+      <button class="chip" :class="{ active: filter === 'newsletter' }" @click="filter = 'newsletter'">Newsletter</button>
+    </div>
+
+    {% if manual_drafts %}
+      {% for draft in manual_drafts %}
+      <article class="draft-card border-{{ draft.platform }}" x-show="filter === 'all' || filter === '{{ draft.platform }}'" x-transition x-data="{ expanded: false }">
+        <p class="provenance" style="margin-bottom:4px;">
+          {{ draft.trigger_label }} &middot; {{ draft.trigger_reason[:80] if draft.trigger_reason else '' }}
+        </p>
+
+        <div class="draft-card-header">
+          <span class="platform-badge platform-{{ draft.platform }}">{{ draft.platform }}</span>
+          {% if draft.intent == "revenue" %}
+          <span class="badge badge-warning">Revenue</span>
+          {% endif %}
+          <strong>{{ draft.workflow_name }}</strong>
+          <span class="text-muted text-small" style="margin-left:auto;">v{{ draft.version_number }}</span>
+        </div>
+
+        <div @click="expanded = !expanded" style="cursor:pointer;">
+          <div class="content-preview" :style="expanded ? '-webkit-line-clamp:unset;overflow:visible' : ''">{{ draft.content }}</div>
+          <span class="text-small" style="color:var(--accent);margin-top:4px;display:inline-block;" x-text="expanded ? 'Show less' : 'Show more'"></span>
+        </div>
+
+        {% if draft.assets %}
+        <div class="draft-assets" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+          {% for asset in draft.assets %}
+          <div class="asset-chip" style="display:inline-flex;align-items:center;gap:4px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:4px 10px;font-size:11px;">
+            <span style="opacity:0.6;">{% if 'image' in (asset.mime_type or '') %}&#128444;{% else %}&#128206;{% endif %}</span>
+            <span>{{ asset.asset_role or 'asset' }}</span>
+            <span class="text-muted" style="font-size:9px;">{{ asset.provider or '' }}{% if asset.render_status %} &middot; {{ asset.render_status }}{% endif %}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="draft-actions" x-data="{ mode: '' }">
+          <form hx-post="/control-room/drafts/{{ draft.id }}/action" hx-target="#draft-result-{{ draft.id }}" hx-swap="innerHTML">
+            <input type="hidden" name="action" value="post_now">
+            <button type="submit" class="btn btn-primary btn-sm">Post Now</button>
+          </form>
+
+          <button type="button" class="btn btn-sm" @click="mode = mode === 'schedule' ? '' : 'schedule'">Schedule</button>
+          <button type="button" class="btn btn-danger btn-sm" @click="mode = mode === 'reject' ? '' : 'reject'">Reject</button>
+
+          <div x-show="mode === 'schedule'" x-cloak style="display:flex;gap:6px;align-items:center;width:100%;margin-top:6px;">
+            <form hx-post="/control-room/drafts/{{ draft.id }}/action" hx-target="#draft-result-{{ draft.id }}" hx-swap="innerHTML" style="display:flex;gap:6px;align-items:center;">
+              <input type="hidden" name="action" value="schedule">
+              <input type="datetime-local" name="scheduled_at" class="input-sm" required>
+              <button type="submit" class="btn btn-primary btn-sm">Confirm</button>
+            </form>
+          </div>
+
+          <div x-show="mode === 'reject'" x-cloak style="display:flex;gap:6px;align-items:center;width:100%;margin-top:6px;">
+            <form hx-post="/control-room/drafts/{{ draft.id }}/action" hx-target="#draft-result-{{ draft.id }}" hx-swap="innerHTML" style="display:flex;gap:6px;align-items:center;">
+              <input type="hidden" name="action" value="reject">
+              <input type="text" name="notes" placeholder="Why is this bad? (optional)" class="input-sm" style="min-width:200px;">
+              <button type="submit" class="btn btn-danger btn-sm">Confirm</button>
+            </form>
+          </div>
+        </div>
+
+        <div id="draft-result-{{ draft.id }}" class="draft-result"></div>
+      </article>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <p class="empty-state-title">All clear</p>
+        <p>No drafts need review. The engine is handling everything.</p>
+      </div>
+    {% endif %}
+  </section>
+
+  {# -- Right column: Today's Scheduled Activity -- #}
+  <section class="dashboard-scheduled">
+    <div class="section-header">
+      <h2>Today's Activity</h2>
+      <span class="text-muted text-small">Scheduled &amp; calendar-based</span>
+    </div>
+
+    {% set scheduled_items = today_activity['items'] | rejectattr('source', 'equalto', 'external') | list %}
+    {% if scheduled_items %}
+      <div class="activity-timeline">
+        {% for item in scheduled_items %}
+        <div class="timeline-entry" style="padding:10px 12px;">
+          <span class="timeline-dot {{ item.type }}" style="margin-top:5px;"></span>
+          <div class="timeline-body" style="flex:1;min-width:0;">
+            <div class="timeline-title" style="font-size:13px;">
+              {% if item.platform %}<span class="platform-badge platform-{{ item.platform }}" style="font-size:9px;">{{ item.platform }}</span>{% endif %}
+              {{ item.title }}
+            </div>
+            {% if item.detail %}
+            <div class="timeline-meta" style="font-size:11px;">{{ item.detail }}</div>
+            {% endif %}
+          </div>
+          <time class="timeline-time" style="font-size:10px;">{{ item.time }}</time>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p>No scheduled activity yet today.</p>
+      </div>
+    {% endif %}
+  </section>
+
+</div>
+{% endblock %}

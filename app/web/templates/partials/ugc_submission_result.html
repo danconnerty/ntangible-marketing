@@ -1,0 +1,12 @@
+<section class="campaign-run-result">
+  <h2>{{ result.athlete_name }}</h2>
+  <p>Score tier: {{ result.score_tier }}</p>
+  <p>Video URL: <a href="{{ result.video_url }}">{{ result.video_url }}</a></p>
+  <p>Status: {{ result.status }}</p>
+  {% if result.graphic_url %}
+  <p>Graphic: <a href="{{ result.graphic_url }}">{{ result.graphic_url }}</a></p>
+  {% endif %}
+  {% if result.video_brief %}
+  <p>Video brief: {{ result.video_brief.title }}</p>
+  {% endif %}
+</section>

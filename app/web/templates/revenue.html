@@ -1,0 +1,391 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <p class="eyebrow eyebrow-revenue">Revenue Engine</p>
+  <h1>Close Deals. Warm Leads. Arm Partners.</h1>
+  <p class="subtitle">Every piece of content should either close a deal, warm a lead, or arm a partner to sell on NTangible's behalf. This page tracks what drives pipeline, not just what gets likes.</p>
+</section>
+
+{# ====================================================================
+   1. REVENUE OVERVIEW
+   ==================================================================== #}
+<section class="revenue-section">
+  <div class="revenue-section-header">
+    <h2>Revenue Overview</h2>
+    <p class="desc">Revenue-tagged content should represent 25-30% of posting volume. Below shows the current intent split across recent posts and key conversion metrics.</p>
+  </div>
+
+  <div class="rev-overview-grid">
+    {# Intent split gauge #}
+    <div class="rev-overview-card">
+      <div class="rev-overview-label">Revenue Intent</div>
+      <div class="rev-gauge-row">
+        <div class="rev-gauge-track">
+          <div class="rev-gauge-fill rev-fill-revenue" style="width: {{ revenue_pct }}%"></div>
+        </div>
+        <span class="rev-gauge-value">{{ revenue_pct }}%</span>
+      </div>
+      <div class="rev-gauge-target {% if revenue_pct >= 25 and revenue_pct <= 30 %}in-range{% elif revenue_pct < 25 %}below{% else %}above{% endif %}">
+        {% if revenue_pct >= 25 and revenue_pct <= 30 %}
+          On target (25-30%)
+        {% elif revenue_pct < 25 %}
+          Below target (25-30%) — increase revenue content
+        {% else %}
+          Above target (25-30%) — rebalance toward brand/partner
+        {% endif %}
+      </div>
+    </div>
+
+    {# Full intent breakdown #}
+    <div class="rev-overview-card">
+      <div class="rev-overview-label">Intent Split ({{ total_posts }} posts)</div>
+      <div class="rev-intent-bars">
+        <div class="rev-intent-row">
+          <span class="rev-intent-name">Brand</span>
+          <div class="rev-gauge-track">
+            <div class="rev-gauge-fill rev-fill-brand" style="width: {{ brand_pct }}%"></div>
+          </div>
+          <span class="rev-gauge-value">{{ brand_pct }}%</span>
+        </div>
+        <div class="rev-intent-row">
+          <span class="rev-intent-name">Partner</span>
+          <div class="rev-gauge-track">
+            <div class="rev-gauge-fill rev-fill-partner" style="width: {{ partner_pct }}%"></div>
+          </div>
+          <span class="rev-gauge-value">{{ partner_pct }}%</span>
+        </div>
+        <div class="rev-intent-row">
+          <span class="rev-intent-name">Revenue</span>
+          <div class="rev-gauge-track">
+            <div class="rev-gauge-fill rev-fill-revenue" style="width: {{ revenue_pct }}%"></div>
+          </div>
+          <span class="rev-gauge-value">{{ revenue_pct }}%</span>
+        </div>
+      </div>
+    </div>
+
+    {# Quick conversion stats #}
+    <div class="rev-overview-card">
+      <div class="rev-overview-label">Pipeline Snapshot</div>
+      <div class="rev-stat-grid">
+        <div class="rev-stat">
+          <span class="rev-stat-value">{{ active_playbook_count }}</span>
+          <span class="rev-stat-label">Active Playbooks</span>
+        </div>
+        <div class="rev-stat">
+          <span class="rev-stat-value">{{ execution_count }}</span>
+          <span class="rev-stat-label">Executions</span>
+        </div>
+        <div class="rev-stat">
+          <span class="rev-stat-value">{{ conversion_event_count }}</span>
+          <span class="rev-stat-label">Conversions</span>
+        </div>
+        <div class="rev-stat">
+          <span class="rev-stat-value">{{ leads|length }}</span>
+          <span class="rev-stat-label">Leads Tracked</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ====================================================================
+   2. SALES PLAYBOOKS (grouped by audience)
+   ==================================================================== #}
+<section class="revenue-section">
+  <div class="revenue-section-header">
+    <h2>Sales Playbooks</h2>
+    <p class="desc">Pre-built sales motions organized by buyer persona. Each playbook generates conversion-focused content with proof-led messaging and an explicit CTA.</p>
+  </div>
+
+  {% if persona_groups %}
+    {% for group_label, group_playbooks in persona_groups.items() %}
+    <div class="rev-persona-group">
+      <h3 class="rev-persona-heading">{{ group_label }}</h3>
+      <div class="playbook-grid">
+        {% for playbook in group_playbooks %}
+        <article class="playbook-card">
+          <div class="playbook-name">{{ playbook.name }}</div>
+          <div class="playbook-badges">
+            <span class="badge badge-revenue">{{ playbook.playbook_type }}</span>
+            <span class="badge badge-accent">{{ playbook.persona }}</span>
+            {% if not playbook.active %}
+            <span class="badge badge-muted">inactive</span>
+            {% endif %}
+          </div>
+          {% if playbook.purpose %}
+          <div class="purpose-block">{{ playbook.purpose }}</div>
+          {% endif %}
+          <p class="playbook-detail"><strong>Offer:</strong> {{ playbook.offer }}</p>
+          <p class="playbook-detail"><strong>CTA:</strong> {{ playbook.cta }}</p>
+          <form
+            hx-post="/control-room/revenue/playbooks/{{ playbook.slug }}/run"
+            hx-target="#revenue-run-result-{{ playbook.slug }}"
+            hx-swap="innerHTML"
+            style="margin-top:4px;"
+          >
+            <input type="hidden" name="actor" value="sales">
+            <input type="hidden" name="source_kind" value="manual">
+            <input type="hidden" name="source_id" value="manual-run">
+            <button class="btn btn-revenue btn-sm" type="submit">Run Playbook</button>
+          </form>
+          <div id="revenue-run-result-{{ playbook.slug }}"></div>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="empty-state">
+    <p>No revenue playbooks configured yet.</p>
+  </div>
+  {% endif %}
+</section>
+
+{# ====================================================================
+   3. REVENUE CONTENT TYPES (Blueprint Section 7.3 reference)
+   ==================================================================== #}
+<section class="revenue-section">
+  <div class="revenue-section-header">
+    <h2>Revenue Content Types</h2>
+    <p class="desc">Five categories of revenue-driving social content from the playbook. Use these as templates when creating or reviewing posts.</p>
+  </div>
+
+  <div class="rev-content-type-grid">
+    <article class="rev-content-type-card">
+      <div class="rev-ct-header">
+        <span class="rev-ct-icon">$</span>
+        <span class="rev-ct-title">Cost-of-Guessing</span>
+      </div>
+      <p class="rev-ct-desc">Quantifies the financial cost of not using NTangible data. Makes the status quo feel expensive.</p>
+      <div class="rev-ct-example">
+        <span class="rev-ct-example-label">Example</span>
+        "Failed D1 transfer: -$150K. Draft bust: -$3.5M. What if you had pressure-performance data before the decision?"
+      </div>
+    </article>
+
+    <article class="rev-content-type-card">
+      <div class="rev-ct-header">
+        <span class="rev-ct-icon">&check;</span>
+        <span class="rev-ct-title">Social Proof Sequences</span>
+      </div>
+      <p class="rev-ct-desc">Showcases why partners and clients chose NTangible. Builds credibility through real decisions.</p>
+      <div class="rev-ct-example">
+        <span class="rev-ct-example-label">Example</span>
+        "Here's why [Partner] chose NTangible over guessing. Their scouting staff now has pressure-performance context on every prospect."
+      </div>
+    </article>
+
+    <article class="rev-content-type-card">
+      <div class="rev-ct-header">
+        <span class="rev-ct-icon">&para;</span>
+        <span class="rev-ct-title">Case Study Drops</span>
+      </div>
+      <p class="rev-ct-desc">Short-form verified client stories. Real outcomes, specific numbers, no fluff.</p>
+      <div class="rev-ct-example">
+        <span class="rev-ct-example-label">Example</span>
+        "[University] used Clutch Factor data to evaluate 47 transfer portal entries. Three red flags identified. Two offers pulled. Zero regrets."
+      </div>
+    </article>
+
+    <article class="rev-content-type-card">
+      <div class="rev-ct-header">
+        <span class="rev-ct-icon">&rarr;</span>
+        <span class="rev-ct-title">Assessment CTA Posts</span>
+      </div>
+      <p class="rev-ct-desc">Direct call-to-action driving assessment sign-ups. Clear value proposition, simple next step.</p>
+      <div class="rev-ct-example">
+        <span class="rev-ct-example-label">Example</span>
+        "Find out your Clutch Factor. 20 minutes. One assessment. A data profile that travels with you. Link in bio."
+      </div>
+    </article>
+
+    <article class="rev-content-type-card">
+      <div class="rev-ct-header">
+        <span class="rev-ct-icon">&ne;</span>
+        <span class="rev-ct-title">Competitive Positioning</span>
+      </div>
+      <p class="rev-ct-desc">Differentiates NTangible without naming competitors. Frames the category so the audience self-selects.</p>
+      <div class="rev-ct-example">
+        <span class="rev-ct-example-label">Example</span>
+        "Most mental performance tools give you a score. We give you a profile that predicts behavior under pressure. There's a difference."
+      </div>
+    </article>
+  </div>
+</section>
+
+{# ====================================================================
+   4. LEAD PIPELINE (Section 9.3)
+   ==================================================================== #}
+<section class="revenue-section">
+  <div class="revenue-section-header">
+    <h2>Lead Pipeline</h2>
+    <p class="desc">Tracked prospect accounts from the lead nurture engine. Social content supports deal progression — generate touchpoint content tied to each lead's pipeline stage.</p>
+  </div>
+
+  {% if leads %}
+  <div class="rev-lead-grid">
+    {% for lead in leads %}
+    <div class="rev-lead-row">
+      <div class="rev-lead-info">
+        <span class="rev-lead-name">{{ lead.name }}</span>
+        <div class="rev-lead-meta">
+          <span class="badge {% if lead.priority == 'high' %}badge-danger{% elif lead.priority == 'medium' %}badge-warning{% else %}badge-muted{% endif %}">{{ lead.priority }}</span>
+          <span class="badge badge-info">{{ lead.stage }}</span>
+          {% if lead.open_task_count > 0 %}
+          <span class="text-muted text-small">{{ lead.open_task_count }} open task{{ 's' if lead.open_task_count != 1 }}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="rev-lead-next">
+        <span class="text-small text-muted">Next: {{ lead.next_touchpoint }}</span>
+      </div>
+      <div class="rev-lead-actions">
+        <form
+          hx-post="/control-room/leads/{{ lead.id }}/generate-content"
+          hx-target="#lead-rev-result-{{ lead.id }}"
+          hx-swap="innerHTML"
+        >
+          <input type="hidden" name="platform" value="linkedin">
+          <input type="hidden" name="actor" value="sales">
+          <button class="btn btn-revenue btn-sm" type="submit">Generate Touchpoint</button>
+        </form>
+        <div id="lead-rev-result-{{ lead.id }}"></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <p>No lead accounts tracked yet. Leads appear here when added through the lead nurture engine.</p>
+  </div>
+  {% endif %}
+</section>
+
+{# ====================================================================
+   5. PARTNER ENABLEMENT
+   ==================================================================== #}
+<section class="revenue-section">
+  <div class="revenue-section-header">
+    <h2>Partner Enablement</h2>
+    <p class="desc">Content status for each strategic partner. Partners don't just need social content — they need sales ammunition. Track what's been generated and what's still pending.</p>
+  </div>
+
+  <div class="rev-partner-grid">
+    {% for group in partner_enablement %}
+    <article class="rev-partner-card">
+      <div class="rev-partner-name">{{ group["partner"] }}</div>
+      <div class="rev-partner-items">
+        {% for item in group["items"] %}
+        <div class="rev-partner-item">
+          <span class="rev-partner-item-label">{{ item["label"] }}</span>
+          <span class="badge {% if item["generated"] %}badge-success{% else %}badge-warning{% endif %}">
+            {{ "Generated" if item["generated"] else "Pending" }}
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="rev-partner-actions">
+        {% set partner_playbook_slug = 'alliance-registration-push' if group["slug"] == 'alliance_fastpitch' else ('fss-roi-summary' if group["slug"] == 'fss' else '') %}
+        {% if partner_playbook_slug %}
+        <form
+          hx-post="/control-room/revenue/playbooks/{{ partner_playbook_slug }}/run"
+          hx-target="#partner-result-{{ group['slug'] }}"
+          hx-swap="innerHTML"
+        >
+          <input type="hidden" name="actor" value="sales">
+          <input type="hidden" name="source_kind" value="manual">
+          <input type="hidden" name="source_id" value="manual-run">
+          <button class="btn btn-revenue btn-sm" type="submit">Generate Content</button>
+        </form>
+        {% else %}
+        <button class="btn btn-sm" disabled>No playbook linked</button>
+        {% endif %}
+        <div id="partner-result-{{ group['slug'] }}"></div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+{# ====================================================================
+   6. CONVERSION GOALS
+   ==================================================================== #}
+<section class="revenue-section">
+  <div class="revenue-section-header">
+    <h2>Conversion Goals</h2>
+    <p class="desc">Track what actually moves pipeline. Revenue-tagged posts are tracked separately for conversion metrics — link clicks, demo requests, DMs — so the engine optimizes for what drives revenue.</p>
+  </div>
+
+  {% if conversion_goals %}
+  <div class="goal-grid">
+    {% for goal in conversion_goals %}
+    <div class="goal-row">
+      <div class="goal-info">
+        <span class="goal-name">{{ goal.name }}</span>
+        <div class="goal-meta">
+          <span class="badge badge-accent">{{ goal.metric_type }}</span>
+          {% if goal.attribution_window_days %}
+          <span class="text-small text-muted">{{ goal.attribution_window_days }}-day attribution window</span>
+          {% endif %}
+        </div>
+      </div>
+      <span class="badge {% if goal.active %}badge-success{% else %}badge-muted{% endif %}">
+        {{ "Active" if goal.active else "Inactive" }}
+      </span>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if conversion_events %}
+  <div class="rev-events-summary">
+    <p class="text-small text-muted" style="margin-top:12px;">{{ conversion_events|length }} conversion event{{ 's' if conversion_events|length != 1 }} recorded</p>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="empty-state">
+    <p>No conversion goals configured yet.</p>
+  </div>
+  {% endif %}
+</section>
+
+{# ====================================================================
+   7. RECENT EXECUTIONS (compact)
+   ==================================================================== #}
+{% if executions %}
+<section class="revenue-section">
+  <div class="revenue-section-header">
+    <h2>Recent Executions</h2>
+    <p class="desc">History of playbook runs and their outcomes.</p>
+  </div>
+
+  <table class="exec-table">
+    <thead>
+      <tr>
+        <th>Playbook</th>
+        <th>Source</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for execution in executions %}
+      <tr>
+        <td>
+          <strong>{{ execution.summary.get('playbook_slug', execution.revenue_playbook_id) if execution.summary else execution.revenue_playbook_id }}</strong>
+          <br><span class="text-muted text-small">{{ execution.summary.get('playbook_type', '') if execution.summary else '' }}</span>
+        </td>
+        <td>{{ execution.source_kind }}</td>
+        <td>
+          <span class="badge {% if execution.status == 'completed' or execution.status == 'draft_ready' %}badge-success{% elif execution.status == 'failed' %}badge-danger{% else %}badge-info{% endif %}">
+            {{ execution.status }}
+          </span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}

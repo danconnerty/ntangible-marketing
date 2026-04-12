@@ -45,3 +45,31 @@ def test_platform_x_loads():
     assert "x" in data
     assert data["x"]["single_tweet_max_chars"] == 280
     assert data["x"]["max_hashtags"] == 2
+
+
+def test_platform_linkedin_loads():
+    data = load_yaml("platforms/linkedin.yaml")
+    assert "linkedin" in data
+    linkedin = data["linkedin"]
+    assert linkedin["max_chars"] == 3000
+    assert linkedin["max_hashtags"] == 5
+    assert linkedin["auto_publish_default_tier"] == "tier_1"
+    assert linkedin["content_types"]["thought_leadership"]["target_min_chars"] == 1200
+    assert linkedin["content_types"]["thought_leadership"]["target_max_chars"] == 1500
+    assert linkedin["content_types"]["data_insight"]["target_min_chars"] == 600
+    assert linkedin["content_types"]["data_insight"]["target_max_chars"] == 800
+    assert linkedin["content_types"]["company_update"]["target_min_chars"] == 300
+    assert linkedin["content_types"]["company_update"]["target_max_chars"] == 900
+
+
+def test_platform_instagram_loads():
+    data = load_yaml("platforms/instagram.yaml")
+    assert "instagram" in data
+    instagram = data["instagram"]
+    assert instagram["max_caption_chars"] == 2200
+    assert instagram["min_hashtags"] == 6
+    assert instagram["max_hashtags"] == 10
+    assert instagram["auto_publish_default_tier"] == "tier_1"
+    assert instagram["posting_windows_et"] == ["Tue-Fri 11:00-13:00", "Tue-Fri 19:00-21:00"]
+    assert instagram["template_families"]["education_carousel"]["min_slides"] == 5
+    assert instagram["template_families"]["education_carousel"]["max_slides"] == 8

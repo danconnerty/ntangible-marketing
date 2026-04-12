@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control Room Login</title>
+  <link rel="stylesheet" href="/static/css/control_room.css">
+</head>
+<body class="auth-page">
+  <main class="auth-card">
+    <div class="page-header">
+      <p class="eyebrow">NTangible</p>
+      <h1>Control Room Login</h1>
+      <p>Enter the internal operator credentials to access the marketing control room.</p>
+    </div>
+    <form method="post" action="/control-room/login" class="auth-form">
+      <input type="hidden" name="next" value="{{ next_path }}">
+      <label>
+        Username
+        <input class="input" type="text" name="username" autocomplete="username" required>
+      </label>
+      <label>
+        Password
+        <input class="input" type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <button class="btn btn-primary" type="submit">Sign In</button>
+    </form>
+  </main>
+</body>
+</html>

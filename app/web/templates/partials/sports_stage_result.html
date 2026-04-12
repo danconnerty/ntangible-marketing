@@ -1,0 +1,12 @@
+<section class="campaign-run-result">
+  <h2>Sports Stage: {{ result.window_title }}</h2>
+  <p>Actor: {{ result.actor }}</p>
+  {% for run in result.runs %}
+  <article>
+    <h3>{{ run.workflow_name or run.workflow_slug }}</h3>
+    <p>Platform: {{ run.platform }}</p>
+    <p>Status: {{ run.status }}</p>
+    <p>{{ run.content }}</p>
+  </article>
+  {% endfor %}
+</section>

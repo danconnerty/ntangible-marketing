@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Phase 11</p>
+    <h1>Competitors</h1>
+    <p>Track market signals, classify what changed, and generate response drafts through the canonical workflow engine.</p>
+  </div>
+</section>
+
+<section class="campaign-grid">
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Sources</p>
+      <h2>Tracked Sources</h2>
+    </header>
+    <div class="table-list">
+      {% for source in sources %}
+      <article class="analytics-row">
+        <div>
+          <strong>{{ source.display_name }}</strong>
+          <p class="text-muted">{{ source.slug }} · {{ source.platform }}</p>
+        </div>
+        <a href="{{ source.source_url }}" class="sidebar-link" target="_blank" rel="noreferrer">Open Source</a>
+      </article>
+      {% else %}
+      <p class="text-muted">No competitor sources tracked yet.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Signals</p>
+      <h2>Recent Signals</h2>
+    </header>
+    <div class="table-list">
+      {% for signal in signals %}
+      <article class="campaign-card">
+        <p class="badge badge-warning">{{ signal.severity }}</p>
+        <h3>{{ signal.source_name }}</h3>
+        <p><strong>{{ signal.signal_type }}</strong></p>
+        <p>{{ signal.summary }}</p>
+        <p class="text-muted">{{ signal.reaction_angle }}</p>
+        <form
+          hx-post="/control-room/competitors/signals/{{ signal.id }}/respond"
+          hx-target="#competitor-result-{{ signal.id }}"
+          hx-swap="innerHTML"
+        >
+          <input type="hidden" name="platform" value="linkedin">
+          <input type="hidden" name="actor" value="analyst">
+          <button class="btn btn-primary" type="submit">Generate Response Draft</button>
+        </form>
+        <div id="competitor-result-{{ signal.id }}"></div>
+      </article>
+      {% else %}
+      <p class="text-muted">No competitor signals captured yet.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+{% endblock %}

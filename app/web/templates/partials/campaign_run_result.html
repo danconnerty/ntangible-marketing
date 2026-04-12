@@ -1,0 +1,11 @@
+<section class="campaign-run-result">
+  <h2>Campaign Run: {{ result.campaign_slug }}</h2>
+  <p>Actor: {{ result.actor }}</p>
+  {% for run in result.workflow_runs %}
+  <article>
+    <h3>{{ run.workflow_name or run.workflow_slug }}</h3>
+    <p>Status: {{ run.status }}</p>
+    <p>{{ run.summary }}</p>
+  </article>
+  {% endfor %}
+</section>

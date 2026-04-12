@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="page-header">
+  <h1>Topics</h1>
+  <p>Topic profiles that organize knowledge and guide intelligence.</p>
+</header>
+
+{% if topics %}
+<div class="stat-grid">
+  {% for item in topics %}
+  {% set topic = item.topic %}
+  <a href="/control-room/brain/topics/{{ topic.topic_key }}" class="stat-card" style="gap:8px;text-decoration:none;color:inherit;transition:border-color 0.15s;cursor:pointer;">
+    <div style="font-weight:600;font-size:15px;color:var(--foreground);">{{ topic.display_name }}</div>
+    {% if topic.description %}
+      <p style="font-size:12px;color:var(--muted-foreground);margin:0;">{{ topic.description }}</p>
+    {% endif %}
+    <div style="display:flex;gap:16px;font-family:var(--font-mono);font-size:12px;color:var(--muted-foreground);">
+      <span><strong style="color:var(--foreground);">{{ item.entity_count }}</strong> entities</span>
+      <span><strong style="color:var(--foreground);">{{ item.knowledge_count }}</strong> knowledge</span>
+    </div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;">
+      {% if topic.context_enabled %}
+        <span class="badge badge-info">context</span>
+      {% endif %}
+      {% if topic.intelligence_enabled %}
+        <span class="badge badge-success">intelligence</span>
+      {% endif %}
+      {% if topic.memory_enabled %}
+        <span class="badge badge-accent">memory</span>
+      {% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-state-icon">&#x1f3af;</div>
+  <div class="empty-state-title">No topics configured</div>
+  <div class="empty-state-desc">Topic profiles will appear here once created.</div>
+</div>
+{% endif %}
+{% endblock %}

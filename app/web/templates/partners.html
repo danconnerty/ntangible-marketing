@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Partner Engine</p>
+    <h1>Partners</h1>
+    <p>Alliance and FSS event intake, routed drafts, and delivery bundles in one operator view.</p>
+  </div>
+</section>
+
+<section class="campaign-grid">
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Accounts</p>
+      <h2>Partner Accounts</h2>
+    </header>
+    <div class="table-list">
+      {% for partner in partners %}
+      <article class="analytics-row">
+        <div>
+          <strong>{{ partner.display_name }}</strong>
+          <p class="text-muted">{{ partner.slug }}</p>
+        </div>
+      </article>
+      {% else %}
+      <p class="text-muted">No partner accounts loaded.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Manual Intake</p>
+      <h2>Operator Event Submission</h2>
+    </header>
+    <form
+      hx-post="/control-room/partners/alliance_fastpitch/events"
+      hx-target="#partner-event-result"
+      hx-swap="innerHTML"
+      class="auth-form"
+    >
+      <label>
+        Event Type
+        <input class="input" type="text" name="event_type" value="assessment_completed">
+      </label>
+      <label>
+        External Event ID
+        <input class="input" type="text" name="external_event_id" value="evt-demo-1">
+      </label>
+      <button class="btn btn-primary" type="submit">Ingest Alliance Event</button>
+    </form>
+    <div id="partner-event-result"></div>
+  </article>
+</section>
+
+<section class="campaign-grid">
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Events</p>
+      <h2>Recent Partner Events</h2>
+    </header>
+    <div class="table-list">
+      {% for event in events %}
+      <article class="campaign-card">
+        <h3>{{ event.partner_name }}</h3>
+        <p><strong>{{ event.event_type }}</strong></p>
+        <p class="text-muted">{{ event.processing_status }}</p>
+      </article>
+      {% else %}
+      <p class="text-muted">No partner events recorded yet.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Bundles</p>
+      <h2>Partner Delivery Bundles</h2>
+    </header>
+    <div class="table-list">
+      {% for bundle in bundles %}
+      <article class="campaign-card">
+        <h3>{{ bundle.partner_name }}</h3>
+        <p><strong>{{ bundle.platform|upper }}</strong> · {{ bundle.status }}</p>
+        <form
+          hx-post="/control-room/partners/bundles/{{ bundle.id }}/action"
+          hx-target="#bundle-result-{{ bundle.id }}"
+          hx-swap="innerHTML"
+        >
+          <input type="hidden" name="status" value="delivered">
+          <button class="btn btn-primary" type="submit">Mark Delivered</button>
+        </form>
+        <div id="bundle-result-{{ bundle.id }}"></div>
+      </article>
+      {% else %}
+      <p class="text-muted">No delivery bundles generated yet.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+{% endblock %}

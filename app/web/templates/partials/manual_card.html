@@ -1,0 +1,83 @@
+<div class="card draft-card" id="draft-{{ draft.id }}">
+    <div class="draft-meta">
+        <span class="badge badge-info">{{ draft.platform }}</span>
+        <span class="badge {{ draft.trigger_class }}">{{ draft.trigger_label }}</span>
+        <span class="text-muted text-small">{{ draft.created_label or '' }}</span>
+        {% if draft.recommended_label %}
+        <span class="text-muted text-small">Rec: {{ draft.recommended_label }}</span>
+        {% endif %}
+    </div>
+
+    <div class="draft-title">
+        {{ draft.workflow_name }}{% if draft.version_number %} · v{{ draft.version_number }}{% endif %}
+    </div>
+    <div class="text-muted text-small">{{ draft.trigger_reason }}</div>
+    {% if draft.newsletter_segment %}
+    <div class="text-muted text-small">{{ draft.newsletter_segment }}</div>
+    {% endif %}
+    {% if draft.newsletter_subject %}
+    <div class="draft-title">{{ draft.newsletter_subject }}</div>
+    {% endif %}
+    {% if draft.newsletter_preview_text %}
+    <div class="text-muted text-small">{{ draft.newsletter_preview_text }}</div>
+    {% endif %}
+
+    <div class="draft-content">{{ draft.content[:240] }}{% if draft.content|length > 240 %}…{% endif %}</div>
+    {% if draft.hashtags %}
+    <div class="draft-hashtags text-muted text-small">{{ draft.hashtags | join(' ') }}</div>
+    {% endif %}
+
+    <div class="draft-actions">
+        <button
+            class="btn btn-primary"
+            hx-post="/control-room/drafts/{{ draft.id }}/action"
+            hx-vals='{"action": "post_now", "actor": "admin"}'
+            hx-target="#draft-{{ draft.id }}"
+            hx-swap="outerHTML"
+        >
+            Post Now
+        </button>
+
+        <form
+            class="schedule-form"
+            hx-post="/control-room/drafts/{{ draft.id }}/action"
+            hx-target="#draft-{{ draft.id }}"
+            hx-swap="outerHTML"
+        >
+            <input type="hidden" name="action" value="schedule">
+            <input type="hidden" name="actor" value="admin">
+            <input type="datetime-local" name="scheduled_at" class="input input-small" required>
+            <button class="btn btn-ghost" type="submit">Schedule</button>
+        </form>
+
+        <button
+            class="btn btn-ghost"
+            hx-post="/control-room/drafts/{{ draft.id }}/action"
+            hx-vals='{"action": "reject", "actor": "admin"}'
+            hx-target="#draft-{{ draft.id }}"
+            hx-swap="outerHTML"
+        >
+            Reject
+        </button>
+
+        <button
+            class="btn btn-ghost"
+            onclick="window.controlRoom.openDrawer()"
+            hx-get="/control-room/drafts/{{ draft.id }}/panel?focus=why"
+            hx-target="#drawer-content"
+            hx-swap="innerHTML"
+        >
+            Why This Draft?
+        </button>
+
+        <button
+            class="btn btn-ghost"
+            onclick="window.controlRoom.openDrawer()"
+            hx-get="/control-room/drafts/{{ draft.id }}/panel?focus=improve"
+            hx-target="#drawer-content"
+            hx-swap="innerHTML"
+        >
+            Improve Workflow
+        </button>
+    </div>
+</div>

@@ -1,0 +1,19 @@
+{
+  "mock": true,
+  "template_family": "ugc_score_graphic",
+  "brand_mode": "ntangible",
+  "canva_template_id": "ugc_score_graphic",
+  "configured_template_id": null,
+  "expected_data_fields": [],
+  "text_fields": {
+    "athlete_name": "Sarah Mitchell",
+    "score_tier": "Gold",
+    "sport": "fastpitch"
+  },
+  "numeric_fields": {
+    "score": 865
+  },
+  "image_references": [],
+  "asset_role": "primary",
+  "title": "Sarah Mitchell score graphic"
+}

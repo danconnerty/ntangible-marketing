@@ -1,0 +1,14 @@
+linkedin:
+  max_chars: 3000
+  max_hashtags: 5
+  auto_publish_default_tier: tier_1
+  content_types:
+    thought_leadership:
+      target_min_chars: 1200
+      target_max_chars: 1500
+    data_insight:
+      target_min_chars: 600
+      target_max_chars: 800
+    company_update:
+      target_min_chars: 300
+      target_max_chars: 900

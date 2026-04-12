@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <p class="eyebrow">SEO & Blog</p>
+    <h1>Long-Form Articles for Search and Authority</h1>
+    <p>Generate 800-1200 word blog drafts with title, meta description, headings, and keyword focus.</p>
+  </div>
+</section>
+
+<section class="campaign-grid">
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Draft</p>
+      <h2>Create a blog post</h2>
+    </header>
+    <form hx-post="/api/control-room/blog/drafts" hx-target="#blog-result" hx-swap="innerHTML">
+      <label class="input-group">
+        <span>Topic</span>
+        <input class="input" type="text" name="topic" placeholder="Pressure performance assessment">
+      </label>
+      <label class="input-group">
+        <span>Audience</span>
+        <input class="input" type="text" name="audience" placeholder="college coaches">
+      </label>
+      <label class="input-group">
+        <span>Target keywords</span>
+        <input class="input" type="text" name="target_keywords" placeholder="mental performance testing, clutch factor sports">
+      </label>
+      <label class="input-group">
+        <span>Angle</span>
+        <textarea class="input textarea" name="angle" rows="3" placeholder="Explain why validation changes the recruiting conversation."></textarea>
+      </label>
+      <button class="btn btn-primary" type="submit">Generate Blog Draft</button>
+    </form>
+  </article>
+
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Publish</p>
+      <h2>Push to CMS</h2>
+    </header>
+    <p class="text-muted">Publish an existing blog article through the configured CMS adapter once the draft is approved.</p>
+  </article>
+</section>
+
+<section class="card analytics-section mt-4">
+  <div class="section-header">
+    <h2>Recent Articles</h2>
+    <p class="text-muted">Drafts, ready items, and published posts</p>
+  </div>
+  <div id="blog-result"></div>
+  {% for article in articles %}
+  <article class="campaign-card">
+    <p class="badge badge-info">{{ article.status }}</p>
+    <h3>{{ article.title }}</h3>
+    <p>{{ article.meta_description }}</p>
+    <p class="text-muted">{{ article.word_count }} words · {{ article.target_keywords | join(', ') }}</p>
+    <form hx-post="/api/control-room/blog/drafts/{{ article.id }}/publish" hx-target="#blog-result" hx-swap="innerHTML">
+      <input type="hidden" name="actor" value="editor">
+      <button class="btn btn-primary" type="submit">Publish</button>
+    </form>
+  </article>
+  {% else %}
+  <p class="text-muted">No blog articles have been created yet.</p>
+  {% endfor %}
+</section>
+{% endblock %}
+

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Automatic</h1>
+    <p class="text-muted">Trusted workflows with timed publishing and operator controls.</p>
+</div>
+
+{% if workflows %}
+<div class="stack">
+    {% for workflow in workflows %}
+    <article class="card">
+        <div class="row row-between row-gap">
+            <div>
+                <h2>{{ workflow.workflow_name }}</h2>
+                <p class="text-muted">{{ workflow.platform|upper }} · {{ workflow.timezone }} · {{ workflow.mode }}</p>
+            </div>
+            <div class="row row-gap">
+                <span class="badge {% if workflow.health_status == 'paused' %}badge-warning{% elif workflow.health_status == 'unhealthy' %}badge-danger{% else %}badge-success{% endif %}">
+                    {{ workflow.health_status }}
+                </span>
+                <button
+                    class="btn btn-ghost btn-small"
+                    hx-post="/control-room/workflows/{{ workflow.workflow_id }}/action"
+                    hx-vals='{"action": "pause", "actor": "admin"}'
+                    hx-target="#drawer-content"
+                    hx-swap="innerHTML"
+                >
+                    Pause
+                </button>
+                <button
+                    class="btn btn-ghost btn-small"
+                    hx-post="/control-room/workflows/{{ workflow.workflow_id }}/action"
+                    hx-vals='{"action": "resume", "actor": "admin"}'
+                    hx-target="#drawer-content"
+                    hx-swap="innerHTML"
+                >
+                    Resume
+                </button>
+                <button
+                    class="btn btn-ghost btn-small"
+                    hx-post="/control-room/workflows/{{ workflow.workflow_id }}/action"
+                    hx-vals='{"action": "move_to_manual", "actor": "admin"}'
+                    hx-target="#drawer-content"
+                    hx-swap="innerHTML"
+                >
+                    Move to Manual
+                </button>
+            </div>
+        </div>
+
+        <div class="widget-grid mt-3">
+            <div class="card widget">
+                <div class="widget-value">{{ workflow.next_trigger_label or '—' }}</div>
+                <div class="widget-label">Next Trigger</div>
+            </div>
+            <div class="card widget">
+                <div class="widget-value">{{ workflow.publish_time_label or '—' }}</div>
+                <div class="widget-label">Publish Time</div>
+            </div>
+            <div class="card widget">
+                <div class="widget-value">{{ workflow.queued_draft_count }}</div>
+                <div class="widget-label">Queued Drafts</div>
+            </div>
+            <div class="card widget">
+                <div class="widget-value">{{ workflow.last_success_label or '—' }}</div>
+                <div class="widget-label">Last Success</div>
+            </div>
+        </div>
+
+        {% if workflow.last_error %}
+        <p class="text-danger mt-2">{{ workflow.last_error }}</p>
+        {% endif %}
+
+        {% if workflow.drafts %}
+        <table class="table mt-3">
+            <thead>
+                <tr>
+                    <th>Draft</th>
+                    <th>Publish</th>
+                    <th>Trigger</th>
+                    <th>State</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for draft in workflow.drafts %}
+                <tr>
+                    <td>{{ draft.content[:100] }}{% if draft.content|length > 100 %}…{% endif %}</td>
+                    <td>{{ draft.scheduled_label or '—' }}</td>
+                    <td>{{ draft.trigger_label or '—' }}</td>
+                    <td><span class="badge badge-info">{{ draft.state }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <p class="text-muted">No automatic workflows configured.</p>
+</div>
+{% endif %}
+{% endblock %}

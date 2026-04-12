@@ -1,0 +1,12 @@
+<section class="campaign-run-result">
+  <h2>Repurposing Run</h2>
+  <p>Source: {{ result.source_title }}</p>
+  {% for derivative in result.derivatives %}
+  <article>
+    <h3>{{ derivative.title }}</h3>
+    <p>Channel: {{ derivative.channel }}</p>
+    <p>Status: {{ derivative.status }}</p>
+    <p>{{ derivative.content[:220] }}{% if derivative.content|length > 220 %}…{% endif %}</p>
+  </article>
+  {% endfor %}
+</section>

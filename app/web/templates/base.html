@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" x-data="{ dark: localStorage.getItem('theme') === 'dark' }" :class="{ dark: dark }">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NTangible Marketing Engine</title>
+  <link rel="stylesheet" href="/static/css/control_room.css">
+  <style>[x-cloak]{display:none!important;}</style>
+  <script>
+    // Prevent flash — apply dark class before paint
+    if (localStorage.getItem('theme') === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+  <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js" defer></script>
+</head>
+<body
+  x-data="{
+    drawerOpen: false,
+    sidebarCollapsed: false,
+    mode: (window.location.pathname.indexOf('/brain') !== -1 || window.location.pathname === '/control-room/' || window.location.pathname === '/control-room') ? 'brain' : 'marketing'
+  }"
+  x-on:control-room:open-drawer.window="drawerOpen = true"
+  x-on:control-room:close-drawer.window="drawerOpen = false"
+>
+
+  <div class="app-layout">
+    <nav class="sidebar">
+      <div class="sidebar-brand">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--success);margin-right:6px;"></span>
+        NTangible
+      </div>
+
+      <div class="mode-pill">
+        <a href="/control-room/brain/" :class="{ active: mode === 'brain' }">Brain</a>
+        <a href="/control-room/" :class="{ active: mode === 'marketing' }">Marketing</a>
+      </div>
+
+      <ul class="sidebar-nav" x-show="mode === 'brain'" x-cloak>
+        <li>
+          <a href="/control-room/brain/" class="sidebar-link {% if page == 'brain_overview' %}active{% endif %}">
+            <img src="https://unpkg.com/lucide-static@latest/icons/home.svg" alt="">
+            Overview
+          </a>
+        </li>
+        <li>
+          <a href="/control-room/brain/graph" class="sidebar-link {% if page == 'brain_graph' %}active{% endif %}">
+            <img src="https://unpkg.com/lucide-static@latest/icons/network.svg" alt="">
+            Graph
+          </a>
+        </li>
+        <li>
+          <a href="/control-room/brain/knowledge" class="sidebar-link {% if page == 'brain_knowledge' %}active{% endif %}">
+            <img src="https://unpkg.com/lucide-static@latest/icons/brain.svg" alt="">
+            Knowledge
+          </a>
+        </li>
+        <li>
+          <a href="/control-room/brain/review" class="sidebar-link {% if page == 'brain_review' %}active{% endif %}">
+            <img src="https://unpkg.com/lucide-static@latest/icons/check-circle-2.svg" alt="">
+            Review
+          </a>
+        </li>
+        <li>
+          <a href="/control-room/brain/sources" class="sidebar-link {% if page == 'brain_sources' %}active{% endif %}">
+            <img src="https://unpkg.com/lucide-static@latest/icons/database.svg" alt="">
+            Sources
+          </a>
+        </li>
+        <li>
+          <a href="/control-room/brain/topics" class="sidebar-link {% if page == 'brain_topics' %}active{% endif %}">
+            <img src="https://unpkg.com/lucide-static@latest/icons/layers.svg" alt="">
+            Topics
+          </a>
+        </li>
+        <li>
+          <a href="/control-room/brain/settings" class="sidebar-link {% if page == 'brain_settings' %}active{% endif %}">
+            <img src="https://unpkg.com/lucide-static@latest/icons/settings.svg" alt="">
+            Settings
+          </a>
+        </li>
+        {% if sidebar_topics is defined and sidebar_topics %}
+        <li style="padding:8px 12px 4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted-foreground);opacity:0.6;">Topics</li>
+        {% for t in sidebar_topics %}
+        <li>
+          <a href="/control-room/brain/topics/{{ t.key }}" class="sidebar-link {% if page == 'brain_topic_detail' and topic is defined and topic.topic_key == t.key %}active{% endif %}" style="padding-left:28px;font-size:13px;">
+            <img src="https://unpkg.com/lucide-static@latest/icons/hash.svg" alt="" style="width:14px;height:14px;opacity:0.5;">
+            {{ t.name }}
+          </a>
+        </li>
+        {% endfor %}
+        {% endif %}
+      </ul>
+
+      <ul class="sidebar-nav" x-show="mode === 'marketing'">
+        <li>
+          <a href="/control-room/" class="sidebar-link {% if page == 'dashboard' %}active{% endif %}">
+            <img src="https://unpkg.com/lucide-static@latest/icons/layout-dashboard.svg" alt="">
+            Dashboard
+            {% if review_count and review_count > 0 %}
+              <span class="tab-badge">{{ review_count }}</span>
+            {% endif %}
+          </a>
+        </li>
+        <li>
+          <a href="/control-room/activity" class="sidebar-link {% if page == 'activity' %}active{% endif %}">
+            <img src="https://unpkg.com/lucide-static@latest/icons/activity.svg" alt="">
+            Activity
+          </a>
+        </li>
+        <li>
+          <a href="/control-room/workflows" class="sidebar-link {% if page == 'workflows' %}active{% endif %}">
+            <img src="https://unpkg.com/lucide-static@latest/icons/git-branch.svg" alt="">
+            Workflows
+          </a>
+        </li>
+        <li>
+          <a href="/control-room/analytics" class="sidebar-link {% if page == 'analytics' %}active{% endif %}">
+            <img src="https://unpkg.com/lucide-static@latest/icons/bar-chart-3.svg" alt="">
+            Analytics
+          </a>
+        </li>
+        <li>
+          <a href="/control-room/calendar" class="sidebar-link {% if page == 'calendar' %}active{% endif %}">
+            <img src="https://unpkg.com/lucide-static@latest/icons/calendar.svg" alt="">
+            Calendar
+          </a>
+        </li>
+        <li>
+          <a href="/control-room/expansion" class="sidebar-link {% if page == 'expansion' %}active{% endif %}">
+            <img src="https://unpkg.com/lucide-static@latest/icons/rocket.svg" alt="">
+            Expansion
+          </a>
+        </li>
+        <li>
+          <a href="/control-room/revenue" class="sidebar-link {% if page == 'revenue' %}active{% endif %}">
+            <img src="https://unpkg.com/lucide-static@latest/icons/dollar-sign.svg" alt="">
+            Revenue
+          </a>
+        </li>
+        <li>
+          <a href="/control-room/status" class="sidebar-link {% if page == 'status' %}active{% endif %}">
+            <img src="https://unpkg.com/lucide-static@latest/icons/signal.svg" alt="">
+            Status
+            <span class="status-dot"></span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <button class="theme-toggle"
+                @click="dark = !dark; localStorage.setItem('theme', dark ? 'dark' : 'light')"
+                :title="dark ? 'Switch to light mode' : 'Switch to dark mode'">
+          <img x-show="!dark" src="https://unpkg.com/lucide-static@latest/icons/moon.svg" alt="">
+          <img x-show="dark" src="https://unpkg.com/lucide-static@latest/icons/sun.svg" alt="">
+          <span x-text="dark ? 'Light mode' : 'Dark mode'"></span>
+        </button>
+      </div>
+    </nav>
+
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <aside class="drawer" x-show="drawerOpen" x-cloak x-transition.opacity>
+    <button class="drawer-close" @click="drawerOpen = false">&times;</button>
+    <div id="drawer-content">
+      {% block drawer %}{% endblock %}
+    </div>
+  </aside>
+
+  <script src="/static/js/control_room.js"></script>
+</body>
+</html>

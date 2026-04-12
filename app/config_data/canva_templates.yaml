@@ -1,0 +1,35 @@
+templates:
+  instagram:
+    athlete_spotlight:
+      template_id: "pending_setup"
+      data_fields: [athlete_name, sport, cf_score, school, event_name]
+    commitment_post:
+      template_id: "pending_setup"
+      data_fields: [athlete_name, sport, cf_score, school, committed_to]
+    clutch_certified:
+      template_id: "pending_setup"
+      data_fields: [athlete_name, cf_score, tier_label]
+    event_leaderboard:
+      template_id: "pending_setup"
+      data_fields: [event_name, top_athletes, date]
+    bold_statement:
+      template_id: "pending_setup"
+      data_fields: [quote_text, attribution]
+  x:
+    stat_card:
+      template_id: "pending_setup"
+      data_fields: [headline, stat_value, stat_label, context]
+    quote_graphic:
+      template_id: "pending_setup"
+      data_fields: [quote_text, attribution]
+  linkedin:
+    thought_leadership_header:
+      template_id: "pending_setup"
+      data_fields: [headline, subtitle]
+    partner_announcement:
+      template_id: "pending_setup"
+      data_fields: [partner_name, partner_logo_url, headline]
+  shareable:
+    athlete_score_graphic:
+      template_id: "pending_setup"
+      data_fields: [athlete_name, score_tier, sport]

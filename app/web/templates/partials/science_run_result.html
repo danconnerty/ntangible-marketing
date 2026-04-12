@@ -1,0 +1,18 @@
+<section class="campaign-run-result">
+  <h2>{{ result.title }}</h2>
+  <p>Type: {{ result.science_type }}</p>
+  <p>Status: {{ result.status }}</p>
+  {% if result.job_status %}
+  <p>Workflow job: {{ result.job_status }}</p>
+  {% endif %}
+  <p>{{ result.summary }}</p>
+  {% if result.workflow_slug %}
+  <p>Workflow: {{ result.workflow_slug }}</p>
+  {% endif %}
+  {% if result.source_focus %}
+  <p>Source focus: {{ result.source_focus }}</p>
+  {% endif %}
+  {% if result.draft_id %}
+  <p>Draft ID: {{ result.draft_id }}</p>
+  {% endif %}
+</section>

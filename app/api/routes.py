@@ -1,15 +1,18 @@
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import HTMLResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.agents.compliance import run_compliance_checks
 from app.agents.content_writer import generate_tweets
 from app.api.schemas import GenerateRequest, ResolveRequest
+from app.auth import verify_api_key
+from app.content_brain.dashboard import render_dashboard_html
+from app.content_brain.store import build_overview, latest_source_payload, list_items
 from app.database import get_db
-from app.main import verify_api_key
 from app.models.content import ContentQueue, ContentType, GenerationLog, Intent, Pillar, Status
 from app.publishers import get_publisher
 
@@ -34,6 +37,38 @@ INTENT_MAP = {
     "revenue": Intent.REVENUE,
 }
 TREND_JACK_EXPIRY_MINUTES = 60
+
+
+@router.get("/content-brain/api/overview")
+def content_brain_overview():
+    return build_overview()
+
+
+@router.get("/content-brain/api/source/{target_slug}")
+def content_brain_source_detail(target_slug: str):
+    payload = latest_source_payload(target_slug)
+    if payload is None:
+        raise HTTPException(status_code=404, detail="Content brain source not found")
+    return payload
+
+
+@router.get("/content-brain/api/items")
+def content_brain_items(
+    q: str | None = Query(default=None),
+    platform: str | None = Query(default=None),
+    limit: int = Query(default=50, ge=1, le=250),
+):
+    return {
+        "query": q,
+        "platform": platform,
+        "limit": limit,
+        "items": list_items(query=q, platform=platform, limit=limit),
+    }
+
+
+@router.get("/content-brain", response_class=HTMLResponse)
+def content_brain_dashboard():
+    return HTMLResponse(render_dashboard_html())
 
 
 @router.post("/content/generate", dependencies=[Depends(verify_api_key)])

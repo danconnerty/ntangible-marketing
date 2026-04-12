@@ -1,0 +1,19 @@
+{
+  "mock": true,
+  "template_family": "thought_leadership_header",
+  "brand_mode": "owned",
+  "canva_template_id": "pending_setup",
+  "configured_template_id": "pending_setup",
+  "expected_data_fields": [
+    "headline",
+    "subtitle"
+  ],
+  "text_fields": {
+    "headline": "The Clutch Factor\u2122 Framework Wasn't Built in a Boardroom",
+    "subtitle": "It was designed by the Godfather of U.S. I/O Psychology \u2014 and it shows."
+  },
+  "numeric_fields": {},
+  "image_references": [],
+  "asset_role": "primary",
+  "title": "LinkedIn Thought Leadership"
+}

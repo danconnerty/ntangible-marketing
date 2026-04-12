@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Phase 11</p>
+    <h1>Campaigns</h1>
+    <p>Manual-first campaign launches that flow through the existing trigger and workflow engine.</p>
+  </div>
+</section>
+
+<section class="campaign-grid">
+  {% for campaign in campaigns %}
+  <article class="campaign-card">
+    <header>
+      <p class="badge">{{ campaign.status }}</p>
+      <h2>{{ campaign.name }}</h2>
+      <p>{{ campaign.slug }}</p>
+    </header>
+    <p><strong>Objective:</strong> {{ campaign.objective }}</p>
+    <p><strong>Audience:</strong> {{ campaign.audience }}</p>
+    <p><strong>Theme:</strong> {{ campaign.theme }}</p>
+    <p><strong>Mapped workflows:</strong> {{ campaign.workflow_count }}</p>
+    <form
+      hx-post="/control-room/campaigns/{{ campaign.slug }}/run"
+      hx-target="#campaign-run-result-{{ campaign.slug }}"
+      hx-swap="innerHTML"
+    >
+      <input type="hidden" name="actor" value="planner">
+      <button class="btn btn-primary" type="submit">Run Campaign</button>
+    </form>
+    <div id="campaign-run-result-{{ campaign.slug }}"></div>
+  </article>
+  {% else %}
+  <article class="campaign-card">
+    <h2>No campaigns</h2>
+    <p>Create campaign records and map workflows to run this control-room slice.</p>
+  </article>
+  {% endfor %}
+</section>
+{% endblock %}

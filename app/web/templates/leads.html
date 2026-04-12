@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Phase 11</p>
+    <h1>Leads</h1>
+    <p>Track lead stage, see the next nurture move, and generate manual-first follow-up content without leaving the control room.</p>
+  </div>
+</section>
+
+<section class="campaign-grid">
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Accounts</p>
+      <h2>Lead Accounts</h2>
+    </header>
+    <div class="table-list">
+      {% for lead in leads %}
+      <article class="campaign-card">
+        <h3>{{ lead.name }}</h3>
+        <p><strong>Stage:</strong> {{ lead.stage }}</p>
+        <p><strong>Priority:</strong> {{ lead.priority }}</p>
+        <p><strong>Next touchpoint:</strong> {{ lead.next_touchpoint }}</p>
+        <p><strong>Open tasks:</strong> {{ lead.open_task_count }}</p>
+        <form
+          hx-post="/control-room/leads/{{ lead.id }}/generate-content"
+          hx-target="#lead-result-{{ lead.id }}"
+          hx-swap="innerHTML"
+        >
+          <input type="hidden" name="platform" value="linkedin">
+          <input type="hidden" name="actor" value="sales">
+          <button class="btn btn-primary" type="submit">Generate Nurture Draft</button>
+        </form>
+        <div id="lead-result-{{ lead.id }}"></div>
+      </article>
+      {% else %}
+      <p class="text-muted">No lead accounts are loaded yet.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="campaign-card">
+    <header>
+      <p class="badge">Tasks</p>
+      <h2>Nurture Queue</h2>
+    </header>
+    <div class="table-list">
+      {% for task in tasks %}
+      <article class="analytics-row">
+        <div>
+          <strong>{{ task.lead_name }}</strong>
+          <p>{{ task.task_type }}</p>
+          <p class="text-muted">{{ task.summary }}</p>
+        </div>
+        <span class="badge badge-info">{{ task.status }}</span>
+      </article>
+      {% else %}
+      <p class="text-muted">No nurture tasks queued yet.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+{% endblock %}

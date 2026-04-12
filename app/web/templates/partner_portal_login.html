@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Partner Portal Login</title>
+  <link rel="stylesheet" href="/static/css/control_room.css">
+</head>
+<body class="auth-page">
+  <main class="auth-card">
+    <div class="page-header">
+      <p class="eyebrow">Partner Portal</p>
+      <h1>Partner Login</h1>
+      <p>Submit Alliance or FSS events and review delivery packages.</p>
+    </div>
+    <form method="post" action="/partner-portal/login" class="auth-form">
+      <label>
+        Username
+        <input class="input" type="text" name="username" required>
+      </label>
+      <label>
+        Password
+        <input class="input" type="password" name="password" required>
+      </label>
+      <button class="btn btn-primary" type="submit">Sign In</button>
+    </form>
+  </main>
+</body>
+</html>

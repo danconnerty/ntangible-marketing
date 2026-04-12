@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Phase 7+</p>
+    <h1>Sports Calendar</h1>
+    <p>Macro sports windows that stage content into the existing workflow engine.</p>
+  </div>
+</section>
+
+<section class="analytics-section">
+  <div class="section-header">
+    <h2>Stage a Window</h2>
+    <p class="text-muted">Choose a calendar window and push it into the canonical content pipeline.</p>
+  </div>
+</section>
+
+<section class="campaign-grid">
+  {% for window in windows %}
+  <article class="campaign-card">
+    <header>
+      <p class="badge">{{ window.window_type }}</p>
+      <h2>{{ window.title }}</h2>
+      <p>{{ window.sport }}</p>
+    </header>
+    <p><strong>Window:</strong> {{ window.start_date }} to {{ window.end_date }}</p>
+    <p><strong>Summary:</strong> {{ window.summary }}</p>
+    <p><strong>Angle:</strong> {{ window.stage_angle }}</p>
+    <p><strong>Platforms:</strong> {{ window.default_platforms | join(', ') }}</p>
+    <form
+      hx-post="/api/control-room/sports/windows/{{ window.slug }}/stage"
+      hx-target="#sports-stage-result-{{ window.slug }}"
+      hx-swap="innerHTML"
+    >
+      <input type="hidden" name="actor" value="planner">
+      <button class="btn btn-primary" type="submit">Stage Window</button>
+    </form>
+    <div id="sports-stage-result-{{ window.slug }}"></div>
+  </article>
+  {% else %}
+  <article class="campaign-card">
+    <h2>No sports windows</h2>
+    <p>The macro calendar is empty.</p>
+  </article>
+  {% endfor %}
+</section>
+
+<section class="analytics-section">
+  <div class="section-header">
+    <h2>Rolling 4-Week View</h2>
+    <p class="text-muted">A simple forward calendar so operators can see which windows are live.</p>
+  </div>
+  <div class="table-list">
+    {% for day in calendar_days %}
+    <article class="analytics-row">
+      <div>
+        <strong>{{ day.label }}</strong>
+        <p class="text-muted">{{ day.weekday }}</p>
+      </div>
+      <div class="analytics-stats">
+        {% for window in day.windows %}
+        <span class="badge badge-info">{{ window.title }}</span>
+        {% else %}
+        <span class="text-muted">No active window</span>
+        {% endfor %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

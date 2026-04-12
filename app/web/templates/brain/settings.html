@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Brain Settings</h1>
+    <p class="subtitle">Manage intake connections and monitor processing activity.</p>
+</div>
+
+<section class="card" style="margin-bottom: 1.5rem;">
+    <h2>Intake Connections</h2>
+    <p class="subtitle">Connect accounts to automatically process incoming data.</p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-top: 1rem;">
+        <div class="card" style="padding: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <img src="https://unpkg.com/lucide-static@latest/icons/mail.svg" alt="" style="width:24px;height:24px;opacity:0.7;">
+                <div>
+                    <strong>Gmail</strong>
+                    {% if connections.gmail.status == 'connected' %}
+                        <span class="badge" style="margin-left:0.5rem;background:var(--success);color:#fff;font-size:11px;padding:2px 8px;border-radius:4px;">Connected</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% if connections.gmail.status == 'connected' %}
+                <p style="color: var(--muted-foreground); font-size: 0.875rem;">{{ connections.gmail.label }}</p>
+                <form method="post" action="/control-room/brain/settings/disconnect/gmail" style="margin-top:0.5rem;">
+                    <button type="submit" class="btn btn-outline btn-sm">Disconnect</button>
+                </form>
+            {% elif has_google_creds %}
+                <p style="color: var(--muted-foreground); font-size: 0.875rem;">Not connected</p>
+                <a href="/control-room/brain/settings/connect/gmail" class="btn btn-primary btn-sm" style="display:inline-block;text-decoration:none;margin-top:0.5rem;">Connect</a>
+            {% else %}
+                <p style="color: var(--muted-foreground); font-size: 0.875rem;">Not connected</p>
+                <button class="btn btn-primary btn-sm" disabled title="Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env">Connect</button>
+            {% endif %}
+        </div>
+
+        <div class="card" style="padding: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <img src="https://unpkg.com/lucide-static@latest/icons/calendar.svg" alt="" style="width:24px;height:24px;opacity:0.7;">
+                <div>
+                    <strong>Google Calendar</strong>
+                    {% if connections.calendar.status == 'connected' %}
+                        <span class="badge" style="margin-left:0.5rem;background:var(--success);color:#fff;font-size:11px;padding:2px 8px;border-radius:4px;">Connected</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% if connections.calendar.status == 'connected' %}
+                <p style="color: var(--muted-foreground); font-size: 0.875rem;">{{ connections.calendar.label }}</p>
+                <form method="post" action="/control-room/brain/settings/disconnect/calendar" style="margin-top:0.5rem;">
+                    <button type="submit" class="btn btn-outline btn-sm">Disconnect</button>
+                </form>
+            {% elif has_google_creds %}
+                <p style="color: var(--muted-foreground); font-size: 0.875rem;">Not connected</p>
+                <a href="/control-room/brain/settings/connect/calendar" class="btn btn-primary btn-sm" style="display:inline-block;text-decoration:none;margin-top:0.5rem;">Connect</a>
+            {% else %}
+                <p style="color: var(--muted-foreground); font-size: 0.875rem;">Not connected</p>
+                <button class="btn btn-primary btn-sm" disabled title="Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env">Connect</button>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="card" style="margin-bottom: 1.5rem;">
+    <h2>Alert Channels</h2>
+    <p class="subtitle">Configure where to send important notifications.</p>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-top: 1rem;">
+        <div class="card" style="padding: 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <img src="https://unpkg.com/lucide-static@latest/icons/message-circle.svg" alt="" style="width:24px;height:24px;opacity:0.7;">
+                <strong>Telegram</strong>
+            </div>
+            <p style="color: var(--muted-foreground); font-size: 0.875rem;">Not connected</p>
+            <button class="btn btn-primary btn-sm" disabled title="Coming soon">Connect</button>
+        </div>
+
+        <div class="card" style="padding: 1.25rem; opacity: 0.6;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <img src="https://unpkg.com/lucide-static@latest/icons/message-circle.svg" alt="" style="width:24px;height:24px;opacity:0.7;">
+                <strong>WhatsApp</strong>
+            </div>
+            <p style="color: var(--muted-foreground); font-size: 0.875rem;">Coming soon</p>
+        </div>
+
+        <div class="card" style="padding: 1.25rem; opacity: 0.6;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <img src="https://unpkg.com/lucide-static@latest/icons/message-circle.svg" alt="" style="width:24px;height:24px;opacity:0.7;">
+                <strong>Slack</strong>
+            </div>
+            <p style="color: var(--muted-foreground); font-size: 0.875rem;">Coming soon</p>
+        </div>
+    </div>
+</section>
+
+<section class="card" style="margin-bottom: 1.5rem;">
+    <h2>Processing Queue</h2>
+    <div style="display: flex; gap: 2rem; margin-top: 1rem;">
+        <div>
+            <div style="font-size: 2rem; font-weight: 600;">{{ queue_stats.total_today }}</div>
+            <div style="color: var(--muted-foreground); font-size: 0.875rem;">Processed today</div>
+        </div>
+        <div>
+            <div style="font-size: 2rem; font-weight: 600;">{{ queue_stats.pending }}</div>
+            <div style="color: var(--muted-foreground); font-size: 0.875rem;">Pending</div>
+        </div>
+        <div>
+            <div style="font-size: 2rem; font-weight: 600; {% if queue_stats.errors > 0 %}color: var(--destructive);{% endif %}">{{ queue_stats.errors }}</div>
+            <div style="color: var(--muted-foreground); font-size: 0.875rem;">Errors</div>
+        </div>
+    </div>
+</section>
+
+<section class="card">
+    <h2>Recent Activity</h2>
+    {% if recent_activity %}
+    <div style="margin-top: 1rem; overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <th style="text-align: left; padding: 8px;">Time</th>
+                    <th style="text-align: left; padding: 8px;">Source</th>
+                    <th style="text-align: left; padding: 8px;">Summary</th>
+                    <th style="text-align: left; padding: 8px;">Handlers</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in recent_activity %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 8px; white-space: nowrap;">{{ item.processed_at.strftime('%H:%M') if item.processed_at else '—' }}</td>
+                    <td style="padding: 8px;">{{ item.source_type }}</td>
+                    <td style="padding: 8px;">{% if item.classification %}{{ item.classification.summary }}{% elif item.result and item.result.filter_reason is defined %}Filtered: {{ item.result.filter_reason }}{% else %}—{% endif %}</td>
+                    <td style="padding: 8px;">
+                        {% if item.result %}
+                            {% if 'knowledge' in item.result %}<span class="badge" style="font-size:11px;padding:2px 6px;border-radius:4px;background:var(--primary);color:#fff;">Knowledge</span> {% endif %}
+                            {% if 'workflow' in item.result %}<span class="badge" style="font-size:11px;padding:2px 6px;border-radius:4px;background:var(--warning, #f59e0b);color:#fff;">Workflow</span> {% endif %}
+                            {% if 'alert' in item.result %}<span class="badge" style="font-size:11px;padding:2px 6px;border-radius:4px;background:var(--destructive);color:#fff;">Alert</span> {% endif %}
+                            {% if 'filter_reason' in item.result %}<span style="font-size:11px;color:var(--muted-foreground);">Filtered</span>{% endif %}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color: var(--muted-foreground); margin-top: 1rem;">No items processed yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

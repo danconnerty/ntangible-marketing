@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="page-header">
+  <h1>Review Queue</h1>
+  <p>Drafts awaiting human review before publishing.</p>
+</header>
+
+{% if drafts %}
+<div class="draft-list">
+  {% for draft in drafts %}
+  <article class="draft-card platform-{{ draft.platform }}">
+    <div class="draft-header">
+      <span class="draft-title">{{ draft.title }}</span>
+      <span class="platform-badge platform-{{ draft.platform }}">{{ draft.platform }}</span>
+      {% if draft.pillar %}
+        <span class="badge badge-muted">{{ draft.pillar }}</span>
+      {% endif %}
+      {% if draft.mode %}
+        <span class="badge badge-info">{{ draft.mode }}</span>
+      {% endif %}
+    </div>
+    {% if draft.content %}
+    <p class="draft-preview">{{ draft.content }}</p>
+    {% endif %}
+    <div class="draft-actions">
+      <button class="btn btn-success btn-sm"
+              hx-post="/control-room/review/{{ draft.id }}/approve"
+              hx-swap="outerHTML"
+              hx-target="closest article">Approve</button>
+      <button class="btn btn-sm"
+              hx-post="/control-room/review/{{ draft.id }}/schedule"
+              hx-swap="outerHTML"
+              hx-target="closest article">Schedule</button>
+      <button class="btn btn-danger btn-sm"
+              hx-post="/control-room/review/{{ draft.id }}/reject"
+              hx-swap="outerHTML"
+              hx-target="closest article">Reject</button>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-state-icon">&#x2705;</div>
+  <div class="empty-state-title">Review queue is clear</div>
+  <div class="empty-state-desc">No drafts are waiting for review right now.</div>
+</div>
+{% endif %}
+{% endblock %}

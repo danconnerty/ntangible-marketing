@@ -1,0 +1,16 @@
+<section class="campaign-run-result">
+  <h2>{{ result.title }}</h2>
+  <p>Status: {{ result.status }}</p>
+  {% if result.word_count %}
+  <p>{{ result.word_count }} words</p>
+  {% endif %}
+  {% if result.target_keywords %}
+  <p>Keywords: {{ result.target_keywords | join(', ') }}</p>
+  {% endif %}
+  {% if result.canonical_url %}
+  <p><a href="{{ result.canonical_url }}">{{ result.canonical_url }}</a></p>
+  {% endif %}
+  {% if result.failure_reason %}
+  <p>{{ result.failure_reason }}</p>
+  {% endif %}
+</section>

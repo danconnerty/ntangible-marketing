@@ -35,8 +35,8 @@ def test_mock_tracks_posts():
 def test_post_result_fields():
     result = PostResult(
         success=True,
-        tweet_id="123",
-        tweet_url="https://x.com/test/status/123",
+        platform_post_id="123",
+        post_url="https://x.com/test/status/123",
         posted_at="2026-04-06T12:00:00Z",
     )
     assert result.success is True

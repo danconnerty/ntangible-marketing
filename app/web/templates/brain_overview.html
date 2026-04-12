@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="page-header">
+  <h1>Brain Overview</h1>
+  <p>Knowledge graph, entities, and intelligence at a glance.</p>
+</header>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-icon stat-icon-blue">
+      <img src="https://unpkg.com/lucide-static@latest/icons/network.svg" alt="" style="width:20px;height:20px;">
+    </div>
+    <div class="stat-value">{{ entity_count }}</div>
+    <div class="stat-label">Entities</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon stat-icon-emerald">
+      <img src="https://unpkg.com/lucide-static@latest/icons/brain.svg" alt="" style="width:20px;height:20px;">
+    </div>
+    <div class="stat-value">{{ knowledge_count }}</div>
+    <div class="stat-label">Knowledge</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon stat-icon-violet">
+      <img src="https://unpkg.com/lucide-static@latest/icons/git-branch.svg" alt="" style="width:20px;height:20px;">
+    </div>
+    <div class="stat-value">{{ edge_count }}</div>
+    <div class="stat-label">Edges</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon stat-icon-amber">
+      <img src="https://unpkg.com/lucide-static@latest/icons/database.svg" alt="" style="width:20px;height:20px;">
+    </div>
+    <div class="stat-value">{{ source_count }}</div>
+    <div class="stat-label">Sources</div>
+  </div>
+</div>
+
+{% if recent_knowledge %}
+<section style="margin-bottom:24px;">
+  <div class="section-header">
+    <h2>Recent Knowledge</h2>
+    <span class="count">{{ recent_knowledge|length }}</span>
+  </div>
+  <div class="draft-list">
+    {% for node in recent_knowledge %}
+    <div class="card" style="padding:12px 16px;">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-weight:600;font-size:14px;color:var(--foreground);">{{ node.title }}</span>
+        <span class="badge badge-muted">{{ node.kind }}</span>
+        {% if node.status == 'active' %}
+          <span class="badge badge-success">{{ node.status }}</span>
+        {% elif node.status == 'pending' %}
+          <span class="badge badge-warning">{{ node.status }}</span>
+        {% else %}
+          <span class="badge badge-muted">{{ node.status }}</span>
+        {% endif %}
+        <span style="margin-left:auto;font-family:var(--font-mono);font-size:12px;color:var(--muted-foreground);">
+          {{ "%.0f"|format(node.confidence * 100) }}%
+        </span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if topics %}
+<section>
+  <div class="section-header">
+    <h2>Topics</h2>
+    <span class="count">{{ topics|length }}</span>
+  </div>
+  <div class="stat-grid">
+    {% for topic in topics %}
+    <div class="stat-card" style="gap:6px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-weight:600;font-size:14px;">{{ topic.display_name }}</span>
+        {% if topic.priority == 'high' %}
+          <span class="badge badge-danger">{{ topic.priority }}</span>
+        {% elif topic.priority == 'medium' %}
+          <span class="badge badge-warning">{{ topic.priority }}</span>
+        {% else %}
+          <span class="badge badge-muted">{{ topic.priority }}</span>
+        {% endif %}
+      </div>
+      {% if topic.description %}
+        <p style="font-size:12px;color:var(--muted-foreground);margin:0;">{{ topic.description }}</p>
+      {% endif %}
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;">
+        {% if topic.context_enabled %}
+          <span class="badge badge-info">context</span>
+        {% endif %}
+        {% if topic.intelligence_enabled %}
+          <span class="badge badge-success">intelligence</span>
+        {% endif %}
+        {% if topic.memory_enabled %}
+          <span class="badge badge-accent">memory</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

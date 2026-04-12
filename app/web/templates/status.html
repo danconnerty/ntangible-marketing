@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h1>Status</h1>
+    <p class="text-muted">System health and configuration</p>
+</div>
+
+{# -- Emergency Controls (conditional red styling) -- #}
+{% set paused_wf = summary.get('scheduler_status', {}).get('paused_workflows', 0) %}
+{% set unhealthy_wf = summary.get('scheduler_status', {}).get('unhealthy_workflows', 0) %}
+{% set has_issues = (paused_wf > 0) or (unhealthy_wf > 0) %}
+
+<section class="emergency-card{% if has_issues %} emergency-active{% endif %}">
+    <div class="emergency-title">
+        {% if has_issues %}
+        <span class="badge badge-danger">Emergency</span>
+        {% endif %}
+        Emergency Controls
+    </div>
+    <p class="emergency-status">{{ paused_wf }} workflows currently paused</p>
+    <div class="draft-actions">
+        <form hx-post="/control-room/status/actions" hx-target="#status-action-result" hx-swap="innerHTML">
+            <input type="hidden" name="action" value="pause_all">
+            <button class="btn btn-danger" type="submit">Pause All Workflows</button>
+        </form>
+        <form hx-post="/control-room/status/actions" hx-target="#status-action-result" hx-swap="innerHTML">
+            <input type="hidden" name="action" value="resume_all">
+            <button class="btn btn-secondary" type="submit">Resume All Workflows</button>
+        </form>
+    </div>
+    <div id="status-action-result"></div>
+</section>
+
+{# -- Platform Connections -- #}
+{% set connections = summary.get('connections', []) %}
+{% set connected_channels = [] %}
+{% for c in connections %}{% if c.status == 'connected' %}{% if connected_channels.append(c.channel) %}{% endif %}{% endif %}{% endfor %}
+
+<section class="card analytics-section" x-data="{ openPanel: '' }">
+    <div class="section-header">
+        <h2>Platform Connections</h2>
+        <p class="text-muted">Connect your social media accounts to start publishing</p>
+    </div>
+
+    <div id="connect-result"></div>
+
+    {# -- X / Twitter -- #}
+    <div class="platform-connect-row">
+        <div class="platform-connect-info">
+            <strong>X (Twitter)</strong>
+            {% if 'x' in connected_channels %}
+            <span class="status-badge status-live">Connected</span>
+            {% else %}
+            <span class="status-badge status-offline">Not connected</span>
+            {% endif %}
+        </div>
+        {% if 'x' in connected_channels %}
+        <form hx-post="/control-room/status/disconnect" hx-target="#connect-result" hx-swap="innerHTML" hx-on::after-request="setTimeout(()=>location.reload(),500)">
+            <input type="hidden" name="channel" value="x">
+            <button class="btn btn-danger btn-sm" type="submit">Disconnect</button>
+        </form>
+        {% else %}
+        <button class="btn btn-primary btn-sm" @click="openPanel = openPanel === 'x' ? '' : 'x'">Connect</button>
+        {% endif %}
+    </div>
+    <div x-show="openPanel === 'x'" x-cloak class="platform-connect-form">
+        <p class="text-muted">Get your keys from <a href="https://developer.x.com/en/portal/dashboard" target="_blank">developer.x.com</a> &rarr; Your App &rarr; Keys and Tokens</p>
+        <form hx-post="/control-room/status/connect" hx-target="#connect-result" hx-swap="innerHTML" hx-on::after-request="setTimeout(()=>location.reload(),500)">
+            <input type="hidden" name="channel" value="x">
+            <label>API Key <input type="text" name="api_key" placeholder="Your API Key" required></label>
+            <label>API Secret <input type="password" name="api_secret" placeholder="Your API Secret" required></label>
+            <label>Access Token <input type="text" name="access_token" placeholder="Your Access Token" required></label>
+            <label>Access Token Secret <input type="password" name="access_token_secret" placeholder="Your Access Token Secret" required></label>
+            <button class="btn btn-primary" type="submit">Save Connection</button>
+        </form>
+    </div>
+
+    {# -- LinkedIn -- #}
+    <div class="platform-connect-row">
+        <div class="platform-connect-info">
+            <strong>LinkedIn</strong>
+            {% if 'linkedin' in connected_channels %}
+            <span class="status-badge status-live">Connected</span>
+            {% else %}
+            <span class="status-badge status-offline">Not connected</span>
+            {% endif %}
+        </div>
+        {% if 'linkedin' in connected_channels %}
+        <form hx-post="/control-room/status/disconnect" hx-target="#connect-result" hx-swap="innerHTML" hx-on::after-request="setTimeout(()=>location.reload(),500)">
+            <input type="hidden" name="channel" value="linkedin">
+            <button class="btn btn-danger btn-sm" type="submit">Disconnect</button>
+        </form>
+        {% else %}
+        <button class="btn btn-primary btn-sm" @click="openPanel = openPanel === 'linkedin' ? '' : 'linkedin'">Connect</button>
+        {% endif %}
+    </div>
+    <div x-show="openPanel === 'linkedin'" x-cloak class="platform-connect-form">
+        <p class="text-muted">Get your token from <a href="https://www.linkedin.com/developers/apps" target="_blank">LinkedIn Developers</a> &rarr; Your App &rarr; Auth &rarr; OAuth 2.0 tools</p>
+        <form hx-post="/control-room/status/connect" hx-target="#connect-result" hx-swap="innerHTML" hx-on::after-request="setTimeout(()=>location.reload(),500)">
+            <input type="hidden" name="channel" value="linkedin">
+            <label>Access Token <input type="text" name="access_token" placeholder="Your LinkedIn Access Token" required></label>
+            <label>Organization URN <input type="text" name="organization_urn" placeholder="urn:li:organization:123456" required></label>
+            <button class="btn btn-primary" type="submit">Save Connection</button>
+        </form>
+    </div>
+
+    {# -- Instagram -- #}
+    <div class="platform-connect-row">
+        <div class="platform-connect-info">
+            <strong>Instagram</strong>
+            {% if 'instagram' in connected_channels %}
+            <span class="status-badge status-live">Connected</span>
+            {% else %}
+            <span class="status-badge status-offline">Not connected</span>
+            {% endif %}
+        </div>
+        {% if 'instagram' in connected_channels %}
+        <form hx-post="/control-room/status/disconnect" hx-target="#connect-result" hx-swap="innerHTML" hx-on::after-request="setTimeout(()=>location.reload(),500)">
+            <input type="hidden" name="channel" value="instagram">
+            <button class="btn btn-danger btn-sm" type="submit">Disconnect</button>
+        </form>
+        {% else %}
+        <button class="btn btn-primary btn-sm" @click="openPanel = openPanel === 'instagram' ? '' : 'instagram'">Connect</button>
+        {% endif %}
+    </div>
+    <div x-show="openPanel === 'instagram'" x-cloak class="platform-connect-form">
+        <p class="text-muted">Get your token from <a href="https://developers.facebook.com/apps/" target="_blank">Meta for Developers</a> &rarr; Your App &rarr; Instagram Graph API &rarr; Generate Token</p>
+        <form hx-post="/control-room/status/connect" hx-target="#connect-result" hx-swap="innerHTML" hx-on::after-request="setTimeout(()=>location.reload(),500)">
+            <input type="hidden" name="channel" value="instagram">
+            <label>Access Token <input type="text" name="access_token" placeholder="Your Instagram Access Token" required></label>
+            <label>Business Account ID <input type="text" name="business_account_id" placeholder="17841400000000000" required></label>
+            <button class="btn btn-primary" type="submit">Save Connection</button>
+        </form>
+    </div>
+
+    {# -- Newsletter (Mailchimp) -- #}
+    <div class="platform-connect-row">
+        <div class="platform-connect-info">
+            <strong>Newsletter (Mailchimp)</strong>
+            {% if 'newsletter' in connected_channels %}
+            <span class="status-badge status-live">Connected</span>
+            {% else %}
+            <span class="status-badge status-offline">Not connected</span>
+            {% endif %}
+        </div>
+        {% if 'newsletter' in connected_channels %}
+        <form hx-post="/control-room/status/disconnect" hx-target="#connect-result" hx-swap="innerHTML" hx-on::after-request="setTimeout(()=>location.reload(),500)">
+            <input type="hidden" name="channel" value="newsletter">
+            <button class="btn btn-danger btn-sm" type="submit">Disconnect</button>
+        </form>
+        {% else %}
+        <button class="btn btn-primary btn-sm" @click="openPanel = openPanel === 'newsletter' ? '' : 'newsletter'">Connect</button>
+        {% endif %}
+    </div>
+    <div x-show="openPanel === 'newsletter'" x-cloak class="platform-connect-form">
+        <p class="text-muted">Get your API key from <a href="https://admin.mailchimp.com/account/api/" target="_blank">Mailchimp</a> &rarr; Account &rarr; Extras &rarr; API Keys</p>
+        <form hx-post="/control-room/status/connect" hx-target="#connect-result" hx-swap="innerHTML" hx-on::after-request="setTimeout(()=>location.reload(),500)">
+            <input type="hidden" name="channel" value="newsletter">
+            <label>Mailchimp API Key <input type="text" name="api_key" placeholder="xxxxxxxx-us1" required></label>
+            <label>Server Prefix <input type="text" name="server_prefix" placeholder="us1" required></label>
+            <label>Audience/List ID <input type="text" name="list_id" placeholder="abc123def4" required></label>
+            <button class="btn btn-primary" type="submit">Save Connection</button>
+        </form>
+    </div>
+</section>
+
+{# -- Scheduler -- #}
+<section class="card analytics-section">
+    <div class="section-header">
+        <h2>Scheduler</h2>
+        <p class="text-muted">Automatic publishing engine status</p>
+    </div>
+    {% set sched = summary.get('scheduler_status', {}) %}
+    <div class="metric-grid">
+        <article class="card">
+            <p class="metric-value" style="font-size:1rem;">
+                {% if sched.get('paused_workflows', 0) > 0 %}
+                <span class="status-badge status-paused">paused ({{ sched.get('paused_workflows', 0) }})</span>
+                {% elif sched.get('unhealthy_workflows', 0) > 0 %}
+                <span class="status-badge status-degraded">degraded</span>
+                {% else %}
+                <span class="status-badge status-running">running</span>
+                {% endif %}
+            </p>
+            <p class="eyebrow">Status</p>
+        </article>
+        <article class="card">
+            <p class="metric-value">{{ sched.get('paused_workflows', 0) }}</p>
+            <p class="eyebrow">Paused Workflows</p>
+        </article>
+        <article class="card">
+            <p class="metric-value">{{ sched.get('unhealthy_workflows', 0) }}</p>
+            <p class="eyebrow">Unhealthy Workflows</p>
+        </article>
+        <article class="card">
+            <p class="metric-value">{{ sched.get('upcoming_24h', 0) }}</p>
+            <p class="eyebrow">Upcoming 24h</p>
+        </article>
+        <article class="card">
+            <p class="metric-value">{{ sched.get('due_rules', 0) }}</p>
+            <p class="eyebrow">Due Rules</p>
+        </article>
+        <article class="card">
+            <p class="metric-value">{{ sched.get('due_drafts', 0) }}</p>
+            <p class="eyebrow">Due Drafts</p>
+        </article>
+    </div>
+</section>
+
+
+{# -- Settings -- #}
+<section class="card analytics-section">
+    <div class="section-header">
+        <h2>Settings</h2>
+    </div>
+    <div class="table-list">
+        <article class="analytics-row">
+            <div><strong>Timezone</strong></div>
+            <div>{{ summary.get('timezone', 'UTC') }}</div>
+        </article>
+        <article class="analytics-row">
+            <div><strong>Auth</strong></div>
+            <div>{% if summary.get('auth_required', false) %}Enabled{% else %}Disabled{% endif %}</div>
+        </article>
+    </div>
+</section>
+
+{# -- Roadmap: Coming Soon -- #}
+<section class="card analytics-section" style="opacity:0.5;">
+    <div class="section-header">
+        <h2>Roadmap</h2>
+        <p class="text-muted">Planned integrations and features</p>
+    </div>
+    <div class="metric-grid">
+        <article class="card" style="border:1px dashed #666;">
+            <p class="eyebrow">Sports Calendar Integration</p>
+            <p class="text-muted">Auto-trigger content around game days and events</p>
+            <p class="badge badge-muted">Coming soon</p>
+        </article>
+        <article class="card" style="border:1px dashed #666;">
+            <p class="eyebrow">Content Repurposing Engine</p>
+            <p class="text-muted">Automatically adapt top posts across platforms</p>
+            <p class="badge badge-muted">Coming soon</p>
+        </article>
+        <article class="card" style="border:1px dashed #666;">
+            <p class="eyebrow">Science Credibility Library</p>
+            <p class="text-muted">Verified source database for health and science claims</p>
+            <p class="badge badge-muted">Coming soon</p>
+        </article>
+        <article class="card" style="border:1px dashed #666;">
+            <p class="eyebrow">SEO &amp; Blog Pipeline</p>
+            <p class="text-muted">Long-form content generation and optimization</p>
+            <p class="badge badge-muted">Coming soon</p>
+        </article>
+        <article class="card" style="border:1px dashed #666;">
+            <p class="eyebrow">Video Content / UGC Pipeline</p>
+            <p class="text-muted">Short-form video scripting and UGC coordination</p>
+            <p class="badge badge-muted">Coming soon</p>
+        </article>
+    </div>
+</section>
+{% endblock %}

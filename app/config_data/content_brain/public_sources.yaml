@@ -1,0 +1,218 @@
+sources:
+  - slug: ntangible_home
+    display_name: NTangible Home
+    url: https://ntangible.co/
+    parser: generic_document
+    platform: web
+    source_kind: website
+    notes: Live NTangible homepage.
+  - slug: ntangible_team
+    display_name: NTangible Team
+    url: https://ntangible.co/team
+    parser: generic_document
+    platform: web
+    source_kind: website
+    notes: Team biographies and advisor information.
+  - slug: ntangible_research
+    display_name: NTangible Research
+    url: https://ntangible.co/research
+    parser: generic_document
+    platform: web
+    source_kind: website
+    notes: Public research landing page.
+  - slug: ntangible_partners
+    display_name: NTangible Partners
+    url: https://ntangible.co/partners
+    parser: generic_document
+    platform: web
+    source_kind: website
+    notes: Partner logos and narrative copy.
+  - slug: ntangible_testimonials
+    display_name: NTangible Testimonials
+    url: https://ntangible.co/testimonials
+    parser: generic_document
+    platform: web
+    source_kind: website
+    notes: Public testimonials page.
+  - slug: ntangible_alliance
+    display_name: NTangible Alliance Page
+    url: https://ntangible.co/alliance
+    parser: generic_document
+    platform: web
+    source_kind: website
+    notes: Public Alliance route with embedded leaderboard data.
+  - slug: ntangible_fss
+    display_name: NTangible Future Stars Series Page
+    url: https://ntangible.co/fss
+    parser: generic_document
+    platform: web
+    source_kind: website
+    notes: Public FSS route.
+  - slug: ntangible_cfs
+    display_name: NTangible CFS Page
+    url: https://ntangible.co/cfs
+    parser: generic_document
+    platform: web
+    source_kind: website
+    notes: Public CFS route.
+  - slug: ntangible_instagram_profile
+    display_name: NTangible Instagram
+    url: https://www.instagram.com/ntangiblesports
+    parser: instagram_profile_rendered
+    platform: instagram
+    source_kind: social
+    notes: Public Instagram profile.
+    metadata:
+      fetch_mode: rendered
+  - slug: ntangible_linkedin_company
+    display_name: NTangible LinkedIn Company Page
+    url: https://www.linkedin.com/company/ntangible/
+    parser: generic_document
+    platform: linkedin
+    source_kind: social
+    notes: Public LinkedIn company page.
+  - slug: dan_connerty_mit_sloan_linkedin_article
+    display_name: Dan Connerty MIT Sloan LinkedIn Article
+    url: https://www.linkedin.com/pulse/ntangible-2025-mit-sloan-sports-analytics-conference-dan-connerty-uelwc
+    parser: generic_document
+    platform: linkedin
+    source_kind: social
+    notes: Public LinkedIn Pulse article by Dan Connerty about NTangible at MIT Sloan.
+  - slug: william_carroll_ntangible_linkedin_post
+    display_name: William Carroll NTangible LinkedIn Post
+    url: https://www.linkedin.com/posts/injuryexpert_absolutely-huge-announcements-coming-after-activity-7275803510082883584-FBHZ
+    parser: generic_document
+    platform: linkedin
+    source_kind: social
+    notes: Public LinkedIn post about NTangible growth plans for 2025.
+  - slug: founderspress_top_20_linkedin_post
+    display_name: FoundersPress Top 20 LinkedIn Post
+    url: https://www.linkedin.com/posts/founders-press_top-20-canadian-entrepreneurs-to-watch-in-activity-7417674235864571904-hEN3
+    parser: generic_document
+    platform: linkedin
+    source_kind: social
+    notes: Public LinkedIn post naming Dan Connerty and NTangible in the FoundersPress 2026 entrepreneur list.
+  - slug: ntangible_youtube_feed
+    display_name: NTangible YouTube Feed
+    url: https://www.youtube.com/feeds/videos.xml?channel_id=UC6k2GMbwnIGyEOzXKPZZpWQ
+    parser: youtube_feed
+    platform: youtube
+    source_kind: feed
+    notes: Structured YouTube RSS feed for the NTangible channel.
+  - slug: alliance_partner_page
+    display_name: Alliance Partner Page
+    url: https://thealliancefastpitch.com/partners-ntangible/
+    parser: generic_document
+    platform: web
+    source_kind: partner_page
+    notes: Partner-owned NTangible page on Alliance.
+  - slug: alliance_blog_article
+    display_name: Alliance Mind Over Matter Article
+    url: https://thealliancefastpitch.com/blog/2025/04/16/mind-over-matter-how-big-time-athletes-build-unbreakable-mental-games/
+    parser: generic_document
+    platform: web
+    source_kind: partner_page
+    notes: Alliance article written by NTangible.
+  - slug: high_level_throwing_ntangible
+    display_name: High Level Throwing NTangible Page
+    url: https://highlevelthrowing.com/pages/ntangible-assessment
+    parser: generic_document
+    platform: web
+    source_kind: partner_page
+    notes: Partner page for NTangible Assessment.
+  - slug: future_stars_ntangible_article
+    display_name: Future Stars Series NTangible Article
+    url: https://futurestarsseries.com/ntangible-adds-unique-clutch-performance-angle-to-player-evaluation-development-for-future-stars-series-events/
+    parser: generic_document
+    platform: web
+    source_kind: partner_page
+    notes: Partner article describing the NTangible/FSS relationship.
+    metadata:
+      fetch_mode: rendered
+      headers:
+        User-Agent: Mozilla/5.0
+        Accept-Language: en-US,en;q=0.9
+  - slug: founderspress_rfk_article
+    display_name: FoundersPress RFK Partnership Article
+    url: https://thefounderspress.com/ntangible-brings-mental-fitness-tech-to-rfk-elevate-pit-crew-performance/
+    parser: generic_document
+    platform: web
+    source_kind: press
+    notes: FoundersPress article about the NTangible and RFK Racing partnership.
+  - slug: youth_sports_awards_nominees_article
+    display_name: YSBR Youth Sports Awards Nominees Article
+    url: https://youthsportsbusinessreport.com/youth-sports-business-report-and-gofundme-announce-nominees-for-the-inaugural-youth-sports-awards-across-10-categories/
+    parser: generic_document
+    platform: web
+    source_kind: press
+    notes: Youth Sports Business Report article listing Dan Connerty and NTangible among award nominees.
+  - slug: le_metropolitain_entrepreneur_challenge_article
+    display_name: Le Metropolitain Entrepreneur Challenge Article
+    url: https://lemetropolitain.com/lintelligence-artificielle-sinvite-a-lentrepreneur-challenge/
+    parser: generic_document
+    platform: web
+    source_kind: press
+    notes: French-language article covering Entrepreneur Challenge 2025 and mentioning Dan Connerty and NTangible.
+  - slug: l_express_entrepreneur_challenge_article
+    display_name: L'Express Entrepreneur Challenge Article
+    url: https://l-express.ca/entrepreneur-challenge-2025-lia-gagne-contre-lia/
+    parser: generic_document
+    platform: web
+    source_kind: press
+    notes: French-language article about Entrepreneur Challenge 2025 with Dan Connerty and NTangible coverage.
+  - slug: motorsportsnews_rfk_article
+    display_name: MotorsportsNews RFK Partnership Article
+    url: https://www.motorsportsnews.net/2025/07/08/rfk-racing-joins-forces-with-ntangible-as-official-mental-fitness-partner-enhancing-pit-crew-performance-through-groundbreaking-assessment/
+    parser: generic_document
+    platform: web
+    source_kind: press
+    notes: Public MotorsportsNews coverage of the NTangible and RFK Racing partnership.
+  - slug: captains_agency_advisory_board
+    display_name: The Captains Agency Advisory Board
+    url: https://thecaptainsagency.com/advisory-board
+    parser: generic_document
+    platform: web
+    source_kind: partner_page
+    notes: Public advisory-board page containing bios for Will Carroll and Dan Connerty and explicit NTangible references.
+  - slug: wayback_archived_sitemap
+    display_name: Archived Squarespace Sitemap
+    url: https://web.archive.org/web/20250713155222/https://www.ntangible.co/sitemap.xml
+    parser: sitemap_xml
+    platform: web
+    source_kind: wayback
+    notes: Archived sitemap exposing old NTangible routes.
+  - slug: wayback_hlt_article
+    display_name: Archived High Level Throwing Announcement
+    url: https://web.archive.org/web/20240915171830/https://www.ntangible.co/ntangibleannouncements/hlt
+    parser: generic_document
+    platform: web
+    source_kind: wayback
+    notes: Archived NTangible-hosted launch announcement.
+  - slug: ntangible_team_chunk
+    display_name: NTangible Team Route Chunk
+    url: https://ntangible.co/assets/Team-D9JR-r6u.js
+    parser: js_text_chunk
+    platform: web
+    source_kind: website
+    notes: Lazy route chunk for the Team page.
+  - slug: ntangible_research_chunk
+    display_name: NTangible Research Route Chunk
+    url: https://ntangible.co/assets/Research-NxzUk_U8.js
+    parser: js_text_chunk
+    platform: web
+    source_kind: website
+    notes: Lazy route chunk for the Research page.
+  - slug: ntangible_partners_chunk
+    display_name: NTangible Partners Route Chunk
+    url: https://ntangible.co/assets/PartnersPage-DeUS49va.js
+    parser: js_text_chunk
+    platform: web
+    source_kind: website
+    notes: Lazy route chunk for the Partners page.
+  - slug: ntangible_testimonials_chunk
+    display_name: NTangible Testimonials Route Chunk
+    url: https://ntangible.co/assets/Testimonials-BAMzXbvK.js
+    parser: js_text_chunk
+    platform: web
+    source_kind: website
+    notes: Lazy route chunk for the Testimonials page.

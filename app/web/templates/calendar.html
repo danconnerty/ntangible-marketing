@@ -1,0 +1,442 @@
+{% extends "base.html" %}
+{% block content %}
+
+<script>
+window.workflowWizard = function() {
+    return {
+      showWizard: false, step: 1,
+      workflowType: '', platform: '',
+      name: '', contentType: '', targetAudience: '', contentPillar: '', intentTag: '',
+      toneNotes: '', ctaPreferences: '', hashtagRules: '',
+      days: [], triggerTime: '07:00', publishTime: '07:00', timezone: 'America/New_York',
+      partnerSource: '', eventType: '',
+      get slug() { return this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); },
+      get modeValue() { return this.workflowType === 'manual_calendar' ? 'manual' : 'automatic'; },
+      get triggerTypeValue() { return this.workflowType === 'automatic_signal' ? 'external' : 'calendar'; },
+      get cronExpression() {
+        if (this.triggerTypeValue !== 'calendar') return '';
+        var dayMap = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 0 };
+        var cronDays = this.days.map(function(d) { return dayMap[d]; }).join(',') || '*';
+        var parts = this.triggerTime.split(':');
+        return parts[1] + ' ' + parts[0] + ' * * ' + cronDays;
+      },
+      get triggerLabel() {
+        if (this.triggerTypeValue === 'external') return 'On ' + (this.partnerSource || 'partner') + ' ' + (this.eventType || 'event');
+        if (this.days.length === 0) return 'No days selected';
+        return 'Every ' + this.days.join(', ') + ' at ' + this.triggerTime + ' ET';
+      },
+      toggleDay(day) {
+        if (this.days.includes(day)) { this.days = this.days.filter(d => d !== day); }
+        else { this.days.push(day); }
+      },
+      contentTypes: {
+        linkedin: [{value:'thought_leadership',label:'Thought Leadership'},{value:'data_insight',label:'Data Insight'},{value:'company_update',label:'Company Update'},{value:'partner_proof',label:'Partner Proof'},{value:'case_study',label:'Case Study'}],
+        x: [{value:'hot_take',label:'Hot Take'},{value:'data_drop',label:'Data Drop'},{value:'trend_jack',label:'Trend Jack'},{value:'thread',label:'Thread'},{value:'reactive_content',label:'Reactive Content'}],
+        instagram: [{value:'athlete_spotlight',label:'Athlete Spotlight'},{value:'commitment_post',label:'Commitment Post'},{value:'clutch_certified',label:'Clutch Certified'},{value:'event_leaderboard',label:'Event Leaderboard'},{value:'bold_statement',label:'Bold Statement'},{value:'carousel',label:'Carousel'},{value:'reel',label:'Reel'},{value:'story',label:'Story'}],
+        newsletter: [{value:'monthly_digest',label:'Monthly Digest'},{value:'segment_update',label:'Segment Update'}]
+      },
+      platformDefaults: {
+        linkedin: {tone:'Professional but not corporate. Founder-in-the-arena, not press release.',cta:'Soft CTAs: Thoughts? / Anyone else seeing this?',hashtags:'3-5 max.'},
+        x: {tone:'Punchy. Contrarian. Sports bar meets data lab.',cta:'Embedded in voice. No hard sell.',hashtags:'1-2 max.'},
+        instagram: {tone:'Bold, visual-first. Hook must stand alone.',cta:'One per post. Rotate: tag, link in bio, comment.',hashtags:'6-10 per post.'},
+        newsletter: {tone:'Data insight hook, client/partner proof, product update.',cta:'One primary CTA per section.',hashtags:'Not applicable.'}
+      },
+      applyPlatformDefaults() {
+        var d = this.platformDefaults[this.platform];
+        if (d) { this.toneNotes = d.tone; this.ctaPreferences = d.cta; this.hashtagRules = d.hashtags; }
+        this.contentType = ''; this.name = '';
+      },
+      autoSuggestName() {
+        if (!this.platform || !this.contentType) return;
+        var pLabel = {linkedin:'LinkedIn',x:'X',instagram:'Instagram',newsletter:'Newsletter'}[this.platform] || this.platform;
+        var tLabel = this.contentType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        this.name = pLabel + ' ' + tLabel;
+      },
+      openForDate(dateStr) {
+        var d = new Date(dateStr + 'T12:00:00');
+        var dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        this.days = [dayNames[d.getDay()]];
+        this.showWizard = true;
+        this.step = 1;
+        document.body.style.overflow = 'hidden';
+      },
+      closeWizard() {
+        this.showWizard = false;
+        this.step = 1; this.workflowType = ''; this.platform = '';
+        this.name = ''; this.contentType = ''; this.targetAudience = '';
+        this.contentPillar = ''; this.intentTag = '';
+        this.toneNotes = ''; this.ctaPreferences = ''; this.hashtagRules = '';
+        this.days = []; this.triggerTime = '07:00'; this.publishTime = '07:00';
+        this.partnerSource = ''; this.eventType = '';
+        document.body.style.overflow = '';
+      }
+    };
+};
+</script>
+
+<div x-data="workflowWizard()" @keydown.escape.window="closeWizard()">
+
+{# ============ TOOLBAR ============ #}
+<div class="gcal-toolbar">
+  <div class="gcal-toolbar-left">
+    <h1 class="gcal-title">Calendar</h1>
+    <a href="/control-room/calendar?date_str={{ nav.today }}&view={{ view }}" class="gcal-today-btn">Today</a>
+    <div class="gcal-nav-arrows">
+      {% if view == 'month' %}
+      <a href="/control-room/calendar?date_str={{ nav.prev_month }}&view=month" class="gcal-nav-btn">&lsaquo;</a>
+      <a href="/control-room/calendar?date_str={{ nav.next_month }}&view=month" class="gcal-nav-btn">&rsaquo;</a>
+      {% elif view == 'week' %}
+      <a href="/control-room/calendar?date_str={{ nav.prev_week }}&view=week" class="gcal-nav-btn">&lsaquo;</a>
+      <a href="/control-room/calendar?date_str={{ nav.next_week }}&view=week" class="gcal-nav-btn">&rsaquo;</a>
+      {% else %}
+      <a href="/control-room/calendar?date_str={{ nav.prev_day }}&view=day" class="gcal-nav-btn">&lsaquo;</a>
+      <a href="/control-room/calendar?date_str={{ nav.next_day }}&view=day" class="gcal-nav-btn">&rsaquo;</a>
+      {% endif %}
+    </div>
+    <span class="gcal-period-label">{% if view == 'month' %}{{ month_label }}{% elif view == 'week' %}{{ week_label }}{% else %}{{ day_label }}{% endif %}</span>
+  </div>
+  <div class="gcal-toolbar-right">
+    <div class="gcal-subscribe-wrap" x-data="{ showSub: false }" @click.outside="showSub = false">
+      <button class="gcal-today-btn" @click="showSub = !showSub" type="button">Subscribe</button>
+      <div class="gcal-subscribe-dropdown" x-show="showSub" x-cloak>
+        <div class="gcal-subscribe-label">Subscribe to this calendar</div>
+        <div class="gcal-subscribe-url-row">
+          <input type="text" class="gcal-subscribe-url" value="{{ request.url_for('ical_feed') }}" readonly @click="$el.select()">
+          <button class="gcal-subscribe-copy" type="button" @click="navigator.clipboard.writeText($el.previousElementSibling.value); $el.textContent = '✓'; setTimeout(() => $el.textContent = 'Copy', 1500)">Copy</button>
+        </div>
+        <a class="gcal-subscribe-gcal-btn" href="https://calendar.google.com/calendar/r/settings/addbyurl" target="_blank" rel="noopener">
+          Add to Google Calendar &rarr;
+        </a>
+        <div class="gcal-subscribe-hint">Paste the URL above when prompted</div>
+      </div>
+    </div>
+    <div class="gcal-view-switcher">
+      <a href="/control-room/calendar?date_str={{ anchor }}&view=day" class="gcal-view-btn{% if view == 'day' %} active{% endif %}">Day</a>
+      <a href="/control-room/calendar?date_str={{ anchor }}&view=week" class="gcal-view-btn{% if view == 'week' %} active{% endif %}">Week</a>
+      <a href="/control-room/calendar?date_str={{ anchor }}&view=month" class="gcal-view-btn{% if view == 'month' %} active{% endif %}">Month</a>
+    </div>
+  </div>
+</div>
+
+{# ============ MONTH VIEW ============ #}
+{% if view == 'month' %}
+<div class="gcal-month-wrap">
+  <div class="gcal-month-header">
+    {% for dow in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+    <div class="gcal-dow">{{ dow }}</div>
+    {% endfor %}
+  </div>
+  <div class="gcal-month-grid">
+    {% for day in month_days %}
+    <div class="gcal-month-cell{% if day.is_today %} gcal-today{% endif %}{% if not day.is_current_month %} gcal-outside{% endif %}{% if day.is_weekend %} gcal-weekend{% endif %}"
+         @click="openForDate('{{ day.date }}')">
+      <a href="/control-room/calendar?date_str={{ day.date }}&view=day"
+         class="gcal-day-num{% if day.is_today %} gcal-day-num-today{% endif %}"
+         @click.stop>{{ day.day }}</a>
+      <div class="gcal-cell-events" @click.stop="openForDate('{{ day.date }}')">
+        {% for item in day["items"][:3] %}
+        <a href="/control-room/calendar?date_str={{ day.date }}&view=day" class="gcal-event gcal-event-{{ item.platform or 'default' }} gcal-event-type-{{ item.type }}" @click.stop>
+          {% if item.time_label %}<span class="gcal-event-time">{{ item.time_label }}</span>{% endif %}
+          <span class="gcal-event-title">{{ item.title }}</span>
+        </a>
+        {% endfor %}
+        {% if day["items"]|length > 3 %}
+        <a href="/control-room/calendar?date_str={{ day.date }}&view=day" class="gcal-more-link" @click.stop>+{{ day["items"]|length - 3 }} more</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{# ============ WEEK VIEW ============ #}
+{% if view == 'week' %}
+<div class="gcal-week-wrap">
+  <div class="gcal-week-header">
+    <div class="gcal-time-gutter-header"></div>
+    {% for day in week_days %}
+    <div class="gcal-week-day-header{% if day.is_today %} gcal-week-today-header{% endif %}">
+      <span class="gcal-week-dow">{{ day.weekday_short }}</span>
+      <a href="/control-room/calendar?date_str={{ day.date }}&view=day"
+         class="gcal-week-daynum{% if day.is_today %} gcal-day-num-today{% endif %}">{{ day.day }}</a>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% set ns = namespace(has_allday=false) %}
+  {% for day in week_days %}{% for item in day["items"] %}{% if not item.time %}{% set ns.has_allday = true %}{% endif %}{% endfor %}{% endfor %}
+  {% if ns.has_allday %}
+  <div class="gcal-allday-row">
+    <div class="gcal-allday-label">all-day</div>
+    {% for day in week_days %}
+    <div class="gcal-allday-cell{% if day.is_today %} gcal-week-today-col{% endif %}">
+      {% for item in day["items"] if not item.time %}
+      <div class="gcal-allday-event gcal-event-{{ item.platform or 'default' }} gcal-event-type-{{ item.type }}">
+        <span class="gcal-event-title">{{ item.title }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="gcal-week-body">
+    <div class="gcal-week-scroll">
+      {% for h in range(24) %}
+      <div class="gcal-week-row">
+        <div class="gcal-time-gutter">{% if h > 0 %}<span class="gcal-time-gutter-inner">{{ '{:02d}'.format(h) }}:00</span>{% endif %}</div>
+        {% for day in week_days %}
+        <div class="gcal-week-cell{% if day.is_today %} gcal-week-today-col{% endif %}" @click="openForDate('{{ day.date }}')">
+          {% for item in day["items"] if item.time and item.time[:2]|int == h %}
+          <a href="/control-room/calendar?date_str={{ day.date }}&view=day" class="gcal-event gcal-event-{{ item.platform or 'default' }} gcal-event-type-{{ item.type }}" @click.stop>
+            <span class="gcal-event-title">{{ item.title }}</span>
+            <span class="gcal-event-time">{{ item.time_label }}</span>
+          </a>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{# ============ DAY VIEW ============ #}
+{% if view == 'day' %}
+<div class="gcal-day-wrap">
+  {% set day_allday = day_items | selectattr('time', 'equalto', '') | list %}
+  {% if day_allday %}
+  <div class="gcal-day-allday">
+    <div class="gcal-allday-label">all-day</div>
+    <div class="gcal-day-allday-events">
+      {% for item in day_allday %}
+      <div class="gcal-allday-event gcal-event-{{ item.platform or 'default' }} gcal-event-type-{{ item.type }}">
+        <span class="gcal-event-title">{{ item.title }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="gcal-day-body">
+    <div class="gcal-day-scroll">
+      {% for hour in day_hours %}
+      <div class="gcal-day-row">
+        <div class="gcal-time-gutter">{{ hour.label_12 }}</div>
+        <div class="gcal-day-cell" @click="triggerTime = '{{ '{:02d}'.format(hour.hour) }}:00'; openForDate('{{ anchor }}')">
+          {% for item in hour["items"] %}
+          <div class="gcal-day-event gcal-event-{{ item.platform or 'default' }} gcal-event-type-{{ item.type }}">
+            <div class="gcal-day-event-inner">
+              <span class="gcal-event-title">{{ item.title }}</span>
+              <span class="gcal-event-time">{{ item.time_label }}</span>
+              {% if item.platform %}<span class="gcal-event-platform">{{ item.platform|upper }}</span>{% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+
+{# ============ WORKFLOW WIZARD MODAL ============ #}
+<div x-show="showWizard" x-cloak class="gcal-wizard-backdrop" @click="closeWizard()"></div>
+<div x-show="showWizard" x-cloak class="gcal-wizard-panel">
+  <button @click="closeWizard()" class="gcal-wizard-close">&times;</button>
+
+  <div style="padding:24px 28px;">
+    {# Progress #}
+    <div class="wizard-progress">
+      <template x-for="s in [{n:1,label:'Type'},{n:2,label:'Platform'},{n:3,label:'Content'},{n:4,label:'Trigger'},{n:5,label:'Review'}]" :key="s.n">
+        <div class="wizard-step-indicator" :class="{ active: step === s.n, done: step > s.n }">
+          <span class="wizard-step-num" x-text="step > s.n ? '\u2713' : s.n"></span>
+          <span class="wizard-step-label" x-text="s.label"></span>
+        </div>
+      </template>
+    </div>
+
+    {# Step 1: Type #}
+    <div x-show="step === 1">
+      <h2 class="wizard-section-title">How should this workflow operate?</h2>
+      <div class="wizard-card-grid">
+        <button class="wizard-choice-card" :class="{ selected: workflowType === 'manual_calendar' }" @click="workflowType = 'manual_calendar'">
+          <div class="wizard-choice-title">Manual Review</div>
+          <div class="wizard-choice-desc">Content fires on a schedule. You review before it publishes.</div>
+        </button>
+        <button class="wizard-choice-card" :class="{ selected: workflowType === 'automatic_calendar' }" @click="workflowType = 'automatic_calendar'">
+          <div class="wizard-choice-title">Automatic Schedule</div>
+          <div class="wizard-choice-desc">Content fires on a schedule and auto-publishes.</div>
+        </button>
+        <button class="wizard-choice-card" :class="{ selected: workflowType === 'automatic_signal' }" @click="workflowType = 'automatic_signal'">
+          <div class="wizard-choice-title">Automatic Signal</div>
+          <div class="wizard-choice-desc">Content fires when a partner event arrives.</div>
+        </button>
+      </div>
+      <div class="wizard-nav"><div></div><button class="btn btn-primary" :disabled="!workflowType" @click="step = 2">Next</button></div>
+    </div>
+
+    {# Step 2: Platform #}
+    <div x-show="step === 2">
+      <h2 class="wizard-section-title">Which platform?</h2>
+      <div class="wizard-card-grid wizard-card-grid-4">
+        <button class="wizard-choice-card" :class="{ selected: platform === 'linkedin' }" @click="platform = 'linkedin'; applyPlatformDefaults()">
+          <div class="wizard-choice-icon platform-icon-linkedin">in</div>
+          <div class="wizard-choice-title">LinkedIn</div>
+        </button>
+        <button class="wizard-choice-card" :class="{ selected: platform === 'x' }" @click="platform = 'x'; applyPlatformDefaults()">
+          <div class="wizard-choice-icon platform-icon-x">X</div>
+          <div class="wizard-choice-title">X (Twitter)</div>
+        </button>
+        <button class="wizard-choice-card" :class="{ selected: platform === 'instagram' }" @click="platform = 'instagram'; applyPlatformDefaults()">
+          <div class="wizard-choice-icon platform-icon-instagram">IG</div>
+          <div class="wizard-choice-title">Instagram</div>
+        </button>
+        <button class="wizard-choice-card" :class="{ selected: platform === 'newsletter' }" @click="platform = 'newsletter'; applyPlatformDefaults()">
+          <div class="wizard-choice-icon platform-icon-newsletter">&#9993;</div>
+          <div class="wizard-choice-title">Newsletter</div>
+        </button>
+      </div>
+      <div class="wizard-nav"><button class="btn" @click="step = 1">Back</button><button class="btn btn-primary" :disabled="!platform" @click="step = 3">Next</button></div>
+    </div>
+
+    {# Step 3: Content #}
+    <div x-show="step === 3">
+      <h2 class="wizard-section-title">Configure Content</h2>
+      <div class="wizard-form-grid">
+        <div class="wizard-form-row">
+          <div class="wizard-form-field">
+            <label class="wizard-label">Content Type</label>
+            <select class="select" x-model="contentType" @change="autoSuggestName()">
+              <option value="">Select...</option>
+              <template x-for="ct in contentTypes[platform] || []" :key="ct.value"><option :value="ct.value" x-text="ct.label"></option></template>
+            </select>
+          </div>
+          <div class="wizard-form-field">
+            <label class="wizard-label">Workflow Name</label>
+            <input class="input" type="text" x-model="name" placeholder="e.g. LinkedIn Thought Leadership">
+          </div>
+        </div>
+        <div class="wizard-form-row">
+          <div class="wizard-form-field">
+            <label class="wizard-label">Target Audience</label>
+            <input class="input" type="text" x-model="targetAudience" placeholder="e.g. College coaches">
+          </div>
+          <div class="wizard-form-field">
+            <label class="wizard-label">Content Pillar</label>
+            <select class="select" x-model="contentPillar">
+              <option value="">Select...</option>
+              <option value="blind_spot">Blind Spot</option>
+              <option value="cost_of_guessing">Cost of Guessing</option>
+              <option value="client_proof">Client Proof</option>
+              <option value="thought_leadership">Thought Leadership</option>
+              <option value="product">Product</option>
+            </select>
+          </div>
+        </div>
+        <div class="wizard-form-full">
+          <label class="wizard-label">Tone / Voice</label>
+          <textarea class="input textarea" x-model="toneNotes" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="wizard-nav"><button class="btn" @click="step = 2">Back</button><button class="btn btn-primary" :disabled="!name || !contentType" @click="step = 4">Next</button></div>
+    </div>
+
+    {# Step 4: Trigger #}
+    <div x-show="step === 4">
+      <h2 class="wizard-section-title">Configure Trigger</h2>
+      <div x-show="workflowType !== 'automatic_signal'" class="wizard-form-grid">
+        <div class="wizard-form-full">
+          <label class="wizard-label">Days of Week</label>
+          <div class="wizard-day-picker">
+            <template x-for="day in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']" :key="day">
+              <button type="button" class="wizard-day-btn" :class="{ active: days.includes(day) }" @click="toggleDay(day)" x-text="day"></button>
+            </template>
+          </div>
+        </div>
+        <div class="wizard-form-row">
+          <div class="wizard-form-field">
+            <label class="wizard-label">Generation Time</label>
+            <input class="input" type="time" x-model="triggerTime">
+          </div>
+          <div class="wizard-form-field" x-show="workflowType === 'automatic_calendar'">
+            <label class="wizard-label">Publish Time</label>
+            <input class="input" type="time" x-model="publishTime">
+          </div>
+          <div class="wizard-form-field">
+            <label class="wizard-label">Timezone</label>
+            <select class="select" x-model="timezone">
+              <option value="America/New_York">Eastern</option>
+              <option value="America/Chicago">Central</option>
+              <option value="America/Los_Angeles">Pacific</option>
+              <option value="UTC">UTC</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div x-show="workflowType === 'automatic_signal'" class="wizard-form-grid">
+        <div class="wizard-form-row">
+          <div class="wizard-form-field">
+            <label class="wizard-label">Partner Source</label>
+            <select class="select" x-model="partnerSource">
+              <option value="">Select...</option>
+              {% for ps in partner_sources %}<option value="{{ ps.slug }}">{{ ps.display_name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="wizard-form-field">
+            <label class="wizard-label">Event Type</label>
+            <select class="select" x-model="eventType">
+              <option value="">Select...</option>
+              <option value="assessment_completed">Assessment Completed</option>
+              <option value="commitment_update">Commitment Update</option>
+              <option value="leaderboard_published">Leaderboard Published</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="wizard-nav"><button class="btn" @click="step = 3">Back</button><button class="btn btn-primary" @click="step = 5" :disabled="workflowType === 'automatic_signal' ? (!partnerSource || !eventType) : (days.length === 0)">Next</button></div>
+    </div>
+
+    {# Step 5: Review #}
+    <div x-show="step === 5">
+      <h2 class="wizard-section-title">Review & Create</h2>
+      <div class="wizard-review-card card" style="margin-bottom:16px;">
+        <h3 x-text="name" style="font-size:16px;font-weight:600;margin-bottom:8px;"></h3>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="badge platform-badge" :class="'platform-' + platform" x-text="platform.toUpperCase()"></span>
+          <span class="badge badge-muted" x-text="modeValue === 'automatic' ? 'Automatic' : 'Manual'"></span>
+          <span class="badge badge-muted mono" x-text="triggerLabel"></span>
+        </div>
+      </div>
+      <form method="post" action="/control-room/workflows/create">
+        <input type="hidden" name="name" :value="name">
+        <input type="hidden" name="slug" :value="slug">
+        <input type="hidden" name="platform" :value="platform">
+        <input type="hidden" name="content_type" :value="contentType">
+        <input type="hidden" name="mode" :value="modeValue">
+        <input type="hidden" name="trigger_type" :value="triggerTypeValue">
+        <input type="hidden" name="target_audience" :value="targetAudience">
+        <input type="hidden" name="content_pillar" :value="contentPillar">
+        <input type="hidden" name="intent_tag" :value="intentTag">
+        <input type="hidden" name="tone_notes" :value="toneNotes">
+        <input type="hidden" name="cta_preferences" :value="ctaPreferences">
+        <input type="hidden" name="hashtag_rules" :value="hashtagRules">
+        <input type="hidden" name="cron_expression" :value="cronExpression">
+        <input type="hidden" name="trigger_time" :value="triggerTime">
+        <input type="hidden" name="publish_time" :value="publishTime">
+        <input type="hidden" name="timezone" :value="timezone">
+        <input type="hidden" name="partner_source" :value="partnerSource">
+        <input type="hidden" name="event_type" :value="eventType">
+        <input type="hidden" name="days" :value="JSON.stringify(days)">
+        <div class="wizard-nav"><button type="button" class="btn" @click="step = 4">Back</button><button type="submit" class="btn btn-success">Create Workflow</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+</div>
+{% endblock %}

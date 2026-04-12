@@ -39,6 +39,7 @@ def _protect_and_correct_trademarks(content: str, trademarks: dict[str, list[str
 def run_compliance_checks(
     draft: dict,
     requested_claims: list[str],
+    dynamic_value_groups: list[list[str]] | None = None,
 ) -> ComplianceResult:
     brand = get_brand_voice()
     claims_config = get_approved_claims()
@@ -109,6 +110,8 @@ def run_compliance_checks(
         claim = claims_config["claims"][key]
         for value_group in claim["check_value_groups"]:
             covered_values.update(value_group)
+    for value_group in dynamic_value_groups or []:
+        covered_values.update(str(value) for value in value_group)
 
     for token in extract_claim_numerics(corrected):
         normalized_token = token.lower()

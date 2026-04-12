@@ -5,36 +5,56 @@ from sqlalchemy import engine_from_config, pool
 
 from app.config import get_settings
 from app.database import Base
-from app.models.content import ContentQueue, GenerationLog
+
+# Brain models — import so Alembic sees them in metadata
+from app.models.brain import (  # noqa: F401
+    EntityEdge,
+    EntityNode,
+    KnowledgeEdge,
+    KnowledgeNode,
+    TopicProfile,
+)
+
+# Retained standalone tables
+from app.models.asset import Asset  # noqa: F401
+from app.models.publishing_connection import (  # noqa: F401
+    AppConnection,
+    PublishingDestination,
+)
 
 config = context.config
+
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-config.set_main_option("sqlalchemy.url", get_settings().database_url)
 target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
-    url = config.get_main_option("sqlalchemy.url")
+    url = get_settings().database_url
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
-        dialect_opts={"paramstyle": "named"},
     )
     with context.begin_transaction():
         context.run_migrations()
 
 
 def run_migrations_online() -> None:
+    configuration = config.get_section(config.config_ini_section) or {}
+    configuration["sqlalchemy.url"] = get_settings().database_url
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        configuration,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            version_table_pk=False,
+        )
         with context.begin_transaction():
             context.run_migrations()
 

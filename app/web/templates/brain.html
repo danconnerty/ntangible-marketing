@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+    <h1>Brain / History</h1>
+    <p class="text-muted">Search the entire content memory</p>
+</div>
+
+<form class="card mt-3" method="get" action="/control-room/brain">
+    <div class="grid-two">
+        <input class="input" type="search" name="query" value="{{ query or '' }}" placeholder="Search past posts, trigger text, or topics">
+        <input class="input" type="text" name="workflow_slug" value="{{ request.query_params.get('workflow_slug', '') }}" placeholder="Workflow slug (optional)">
+    </div>
+    <div class="grid-two mt-2">
+        <select class="input" name="bucket">
+            <option value="">All buckets</option>
+            <option value="approved" {% if request.query_params.get('bucket') == 'approved' %}selected{% endif %}>Approved</option>
+            <option value="rejected" {% if request.query_params.get('bucket') == 'rejected' %}selected{% endif %}>Rejected</option>
+            <option value="expired" {% if request.query_params.get('bucket') == 'expired' %}selected{% endif %}>Expired</option>
+            <option value="failed" {% if request.query_params.get('bucket') == 'failed' %}selected{% endif %}>Failed</option>
+            <option value="draft" {% if request.query_params.get('bucket') == 'draft' %}selected{% endif %}>Draft</option>
+            <option value="source" {% if request.query_params.get('bucket') == 'source' %}selected{% endif %}>Source</option>
+        </select>
+        <select class="input" name="platform">
+            <option value="">All platforms</option>
+            <option value="x" {% if request.query_params.get('platform') == 'x' %}selected{% endif %}>X</option>
+            <option value="linkedin" {% if request.query_params.get('platform') == 'linkedin' %}selected{% endif %}>LinkedIn</option>
+            <option value="instagram" {% if request.query_params.get('platform') == 'instagram' %}selected{% endif %}>Instagram</option>
+        </select>
+    </div>
+    <button class="btn btn-primary mt-2" type="submit">Search Memory</button>
+</form>
+
+<div class="grid-three mt-3">
+    <div class="card"><strong>{{ summary.total }}</strong><div class="text-muted text-small">Results</div></div>
+    <div class="card"><strong>{{ summary.approved }}</strong><div class="text-muted text-small">Approved</div></div>
+    <div class="card"><strong>{{ summary.rejected }}</strong><div class="text-muted text-small">Rejected</div></div>
+</div>
+
+{% if items %}
+<div class="draft-list mt-3">
+    {% for item in items %}
+    <article class="card">
+        <div class="draft-meta">
+            <span class="badge badge-info">{{ item.platform or 'source' }}</span>
+            <span class="badge badge-muted">{{ item.bucket }}</span>
+            {% if item.workflow_slug %}<span class="text-muted text-small">{{ item.workflow_slug }}</span>{% endif %}
+            <span class="text-muted text-small">Score {{ item.score }}</span>
+        </div>
+        <h3 class="mt-2">{{ item.title or 'Memory item' }}</h3>
+        <div class="text-muted text-small mt-1">{{ item.content[:240] }}{% if item.content|length > 240 %}…{% endif %}</div>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state mt-3"><p class="text-muted">No memory items match the current search.</p></div>
+{% endif %}
+{% endblock %}

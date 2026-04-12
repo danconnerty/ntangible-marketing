@@ -1,0 +1,33 @@
+<div class="panel-section">
+    <div class="page-header">
+        <h2>Workflow Proposal</h2>
+        <p class="text-muted">{{ proposal.workflow.name }} · v{{ proposal.current_version }} → v{{ proposal.proposed_version }}</p>
+    </div>
+
+    <div class="card mt-3">
+        <h3>Changes</h3>
+        {% if proposal.changes %}
+        <ul class="memory-list">
+            {% for change in proposal.changes %}
+            <li>{{ change }}</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">No configuration changes detected.</p>
+        {% endif %}
+    </div>
+
+    <div class="card mt-3">
+        <h3>Evidence</h3>
+        <p class="text-muted">Approved examples: {{ proposal.approved_examples|length }} · Rejected examples: {{ proposal.rejected_examples|length }}</p>
+    </div>
+
+    <form
+        class="mt-3"
+        hx-post="/control-room/workflows/{{ proposal.workflow.slug }}/versions/{{ proposal.proposed_version }}/activate"
+        hx-target="#drawer-content"
+        hx-swap="innerHTML"
+    >
+        <button class="btn btn-primary" type="submit">Activate This Version</button>
+    </form>
+</div>

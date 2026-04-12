@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "ntangible": {
+      "command": ".venv/bin/python",
+      "args": ["-m", "ntangible_mcp.server"],
+      "env": {
+        "APP_BASE_URL": "https://3-21-155-208.nip.io"
+      }
+    }
+  }
+}

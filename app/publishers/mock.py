@@ -9,17 +9,17 @@ class MockPublisher(BasePublisher):
         self.posted: list[dict] = []
         self.deleted: list[str] = []
 
-    def post_tweet(self, text: str, media: str | None = None) -> PostResult:
-        tweet_id = str(uuid.uuid4())[:12]
+    def publish(self, text: str, media: str | None = None, metadata: dict | None = None) -> PostResult:
+        post_id = str(uuid.uuid4())[:12]
         posted_at = datetime.now(timezone.utc).isoformat()
-        self.posted.append({"text": text, "media": media, "tweet_id": tweet_id})
+        self.posted.append({"text": text, "media": media, "metadata": metadata or {}, "post_id": post_id})
         return PostResult(
             success=True,
-            tweet_id=tweet_id,
-            tweet_url=f"https://x.com/mock/status/{tweet_id}",
+            platform_post_id=post_id,
+            post_url=f"https://x.com/mock/status/{post_id}",
             posted_at=posted_at,
         )
 
-    def delete_tweet(self, tweet_id: str) -> bool:
-        self.deleted.append(tweet_id)
+    def delete(self, post_id: str) -> bool:
+        self.deleted.append(post_id)
         return True
