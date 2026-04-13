@@ -15,3 +15,4 @@ output/
 *.bak
 *.log
 .DS_Store
+storage/generated_assets/

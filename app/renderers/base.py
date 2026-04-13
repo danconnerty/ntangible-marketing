@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
@@ -20,6 +21,10 @@ class CanvaRenderRequest:
     output_dimensions: dict[str, int] | None = None
     output_asset_roles: list[str] = field(default_factory=list)
     title: str | None = None
+    # Optional structured payload for renderers that need richer input than
+    # flat text/numeric fields (e.g., a ranked leaderboard list). The Canva
+    # autofill renderer ignores this field; Pillow renderers opt-in.
+    structured_data: dict[str, Any] | None = None
 
 
 @dataclass

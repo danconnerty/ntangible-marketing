@@ -47,6 +47,8 @@ class Settings(BaseSettings):
     canva_renderer: str = "mock"
     canva_api_key: str = ""
     canva_brand_template_set: str = "default"
+    image_renderer: str = "pillow"
+    generated_asset_root: str = "storage/generated_assets"
     google_client_id: str = ""
     google_client_secret: str = ""
 
@@ -89,6 +91,11 @@ def get_platform_config(platform: str = "x") -> dict:
 @lru_cache
 def get_canva_templates() -> dict:
     return load_yaml("canva_templates.yaml")
+
+
+@lru_cache
+def get_brand_palette() -> dict:
+    return load_yaml("brand_palette.yaml")
 
 
 def get_canva_template(platform: str, template_family: str) -> dict | None:

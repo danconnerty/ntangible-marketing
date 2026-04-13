@@ -17,7 +17,7 @@ from app.agents.newsletter_writer import generate_newsletter_draft
 from app.config import get_canva_template
 from app.models.workflow import Platform, Workflow, WorkflowVersion
 from app.renderers.base import CanvaRenderRequest
-from app.renderers.canva_factory import get_canva_renderer
+from app.renderers.canva_factory import get_canva_renderer, get_image_renderer
 from app.services.instagram_pipeline import (
     _default_publish_mode,
     _render_request_for_generated,
@@ -102,11 +102,15 @@ class PlatformGenerationService:
         image_references: list[str] | None = None,
         asset_roles: list[str] | None = None,
         title: str | None = None,
+        structured_data: dict[str, Any] | None = None,
     ) -> list[GeneratedAssetPayload]:
-        """Attempt to render an image via Canva (mock or HTTP).
+        """Render an image via the active image renderer.
 
-        Returns a list of ``GeneratedAssetPayload`` on success, or an empty
-        list if the render fails (non-fatal for text-first platforms).
+        Phase 1+: defaults to the in-process Pillow renderer. Legacy Canva
+        paths are reachable via ``IMAGE_RENDERER=canva_http``. Returns a list
+        of ``GeneratedAssetPayload`` on success, or an empty list if the
+        render fails (non-fatal for text-first platforms — Instagram wraps
+        this helper and escalates failures separately).
         """
         template_config = get_canva_template(platform, template_family)
         canva_template_id = (
@@ -122,10 +126,11 @@ class PlatformGenerationService:
             image_references=image_references or [],
             output_asset_roles=asset_roles or ["primary"],
             title=title,
+            structured_data=structured_data,
         )
 
         try:
-            render_result = get_canva_renderer().render(render_request)
+            render_result = get_image_renderer().render(render_request)
         except Exception:
             logger.exception("Asset render failed for %s/%s", platform, template_family)
             return []
@@ -139,6 +144,7 @@ class PlatformGenerationService:
             )
             return []
 
+        provider = "pillow"
         payloads: list[GeneratedAssetPayload] = []
         for index, asset in enumerate(render_result.assets):
             filename = asset.storage_path.split("/")[-1] if asset.storage_path else None
@@ -146,7 +152,7 @@ class PlatformGenerationService:
                 GeneratedAssetPayload(
                     asset_type=f"{platform}_media",
                     asset_role=asset.asset_role,
-                    provider="canva",
+                    provider=provider,
                     render_status="succeeded",
                     sort_order=index,
                     filename=filename,

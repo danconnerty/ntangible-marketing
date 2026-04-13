@@ -1,0 +1,9 @@
+# NTangible brand palette used by Pillow image renderers.
+# Phase 1 defaults. Update once real brand tokens are confirmed.
+background: "#0B1220"      # deep navy canvas
+surface: "#111A2E"         # raised row background
+primary_text: "#F5F7FA"    # near-white headlines / names
+secondary_text: "#9AA3B2"  # muted subtitles / labels
+accent: "#F4B72E"          # gold — ranks, score callouts
+rule: "#1E2A44"            # hairline dividers
+wordmark: "#F5F7FA"
