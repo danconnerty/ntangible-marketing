@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ event_name }} — Top 5</title>
+  <style>
+    :root {
+      --background: {{ palette.background }};
+      --surface: {{ palette.surface }};
+      --primary-text: {{ palette.primary_text }};
+      --secondary-text: {{ palette.secondary_text }};
+      --accent: {{ palette.accent }};
+      --rule: {{ palette.rule }};
+      --wordmark: {{ palette.wordmark }};
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: {{ width }}px;
+      height: {{ height }}px;
+      background: var(--background);
+      color: var(--primary-text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    .card {
+      width: 100%;
+      height: 100%;
+      padding: 72px 72px 56px;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding-bottom: 28px;
+      border-bottom: 2px solid var(--rule);
+      margin-bottom: 40px;
+    }
+    .header-left .eyebrow {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .header-left .event-name {
+      font-size: 58px;
+      font-weight: 800;
+      line-height: 1.02;
+      letter-spacing: -0.02em;
+      max-width: 700px;
+    }
+    .header-right .date {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--secondary-text);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      text-align: right;
+    }
+    .rows {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      padding: 22px 32px;
+      background: var(--surface);
+      border-radius: 18px;
+    }
+    .row .rank {
+      font-size: 56px;
+      font-weight: 900;
+      color: var(--accent);
+      width: 72px;
+      text-align: center;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .row .name {
+      flex: 1;
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--primary-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .row .score {
+      font-size: 44px;
+      font-weight: 800;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+    }
+    .footer {
+      margin-top: 36px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--wordmark);
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <header class="header">
+      <div class="header-left">
+        <div class="eyebrow">Clutch Factor · Top 5</div>
+        <h1 class="event-name">{{ event_name }}</h1>
+      </div>
+      <div class="header-right">
+        <div class="date">{{ date }}</div>
+      </div>
+    </header>
+
+    <div class="rows">
+      {% for athlete in top_athletes %}
+      <div class="row">
+        <div class="rank">{{ athlete.rank }}</div>
+        <div class="name">{{ athlete.name }}</div>
+        <div class="score">{{ "%.1f"|format(athlete.cf_score) }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <footer class="footer">NTangible · Clutch Factor</footer>
+  </div>
+</body>
+</html>

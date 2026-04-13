@@ -1,0 +1,11 @@
+{
+  "event_name": "Spring Clutch Showcase",
+  "date": "Apr 13, 2026",
+  "top_athletes": [
+    {"rank": 1, "name": "Marcus Johnson",  "cf_score": 96.4},
+    {"rank": 2, "name": "Elena Ramirez",   "cf_score": 94.1},
+    {"rank": 3, "name": "Jaylen Brooks",   "cf_score": 92.8},
+    {"rank": 4, "name": "Priya Natarajan", "cf_score": 91.2},
+    {"rank": 5, "name": "Devon Mitchell",  "cf_score": 89.7}
+  ]
+}

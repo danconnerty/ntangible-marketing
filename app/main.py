@@ -134,6 +134,7 @@ try:
     from app.web.routes import web_router, public_router
     from app.web.partner_portal import portal_router
     from app.web.brain_settings import brain_settings_router
+    from app.web.routes_studio import studio_router
 except ImportError as exc:  # pragma: no cover - optional dependency in local test envs
     logger.warning("Web router skipped: %s", exc)
 else:
@@ -147,3 +148,4 @@ else:
     app.include_router(sports_web_router)
     app.include_router(repurposing_web_router)
     app.include_router(brain_settings_router)
+    app.include_router(studio_router)
